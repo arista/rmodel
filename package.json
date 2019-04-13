@@ -1,0 +1,22 @@
+{
+  "name": "rmodel",
+  "version": "0.0.1",
+  "author": "Nathan Abramson",
+  "license": "MIT",
+  "main": "dist/rmodel.js",
+  "module": "dist/rmodel.es.js",
+  "files": [
+    "dist"
+  ],
+  "types": "dist/rmodel.d.ts",
+  "scripts": {
+    "start": "npm run build && node dist/rmodel.js",
+    "build": "rollup -c",
+    "watch": "rollup -cw"
+  },
+  "devDependencies": {
+    "rollup": "^1.8.0",
+    "rollup-plugin-typescript2": "^0.20.1",
+    "typescript": "^3.4.1"
+  }
+}
