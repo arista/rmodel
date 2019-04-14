@@ -90,6 +90,4 @@ const rmodelApi = {
 }
 
 // Combine the main function with the API
-const rmodel = Object.assign(rmodelFunc, rmodelApi)
-
-export default rmodel
+export default rmodel = Object.assign(rmodelFunc, rmodelApi)
