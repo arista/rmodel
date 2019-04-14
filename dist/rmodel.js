@@ -1,5 +1,16 @@
 'use strict';
 
+// A proxy for the Array.push function which passes its calls to the
+// RMNode
+class RMArrayPushProxy {
+    constructor(node) {
+        this.node = node;
+    }
+    apply(target, thisArg, args) {
+        return this.node.proxyArrayPush(target, args);
+    }
+}
+
 // A proxy for the Array.pop function which passes its calls to the
 // RMNode
 class RMArrayPopProxy {
@@ -11,14 +22,14 @@ class RMArrayPopProxy {
     }
 }
 
-// A proxy for the Array.push function which passes its calls to the
-// RMNode
-class RMArrayPushProxy {
+// A proxy for the Array.unshift function which passes its calls to
+// the RMNode
+class RMArrayUnshiftProxy {
     constructor(node) {
         this.node = node;
     }
     apply(target, thisArg, args) {
-        return this.node.proxyArrayPush(target, args);
+        return this.node.proxyArrayUnshift(target, args);
     }
 }
 
@@ -43,138 +54,6 @@ class RMArraySpliceProxy {
         return this.node.proxyArraySplice(target, args);
     }
 }
-
-// A proxy for the Array.unshift function which passes its calls to
-// the RMNode
-class RMArrayUnshiftProxy {
-    constructor(node) {
-        this.node = node;
-    }
-    apply(target, thisArg, args) {
-        return this.node.proxyArrayUnshift(target, args);
-    }
-}
-
-// Represents one call buffered by RMBufferedCalls
-class RMBufferedCall {
-    constructor(key, call, priority) {
-        this.key = key;
-        this.call = call;
-        this.priority = priority;
-    }
-}
-
-// Manages a list of "buffered" calls - that is, function calls that
-class RMBufferedCalls {
-    constructor() {
-        this.calls = [];
-        this.callsByKey = new Map();
-        this.flushing = false;
-        this.flushCall = () => this.flush();
-    }
-    // Registers the given function to be buffered for calling later.
-    // If a function has already been registered with the given key,
-    // this call is ignored
-    add(key, f, priority = 0) {
-        if (this.callsByKey.has(key)) {
-            return;
-        }
-        // If we're about to add a call to an empty list then register a
-        // callback to make sure the call is flushed at the end of the
-        // current "tick" unless we're already in the middle of a flush()
-        // call, in which case the registered call will be picked up by
-        // that call
-        if (this.calls.length == 0 && !this.flushing) {
-            this.registerFlushCallback();
-        }
-        // Add the call - sort it into the list by priority order, making
-        // sure it comes after any other items of the same priority
-        const bufferedCall = new RMBufferedCall(key, f, priority);
-        const insertionPoint = RMBufferedCalls.getInsertionPoint(this.calls, bufferedCall);
-        this.calls.splice(insertionPoint, 0, bufferedCall);
-        this.callsByKey.set(key, bufferedCall);
-    }
-    // Registers a call with the system to flush the buffered calls when
-    // the next "tick" occurs
-    registerFlushCallback() {
-        // FIXME - check the environment to make sure we're using the
-        // right call: nextTick, setImmediate, setTimeout(0), etc.
-        process.nextTick(this.flushCall);
-    }
-    // Calls all of the buffered functions, sorted first by priority
-    // order, then sorted by the order they were added.  If more
-    // buffered calls are made while flushing, they will be gathered and
-    // flushed as well, after all of the current buffered calls are
-    // flushed.
-    flush() {
-        const oldFlushing = this.flushing;
-        this.flushing = true;
-        try {
-            // Keep pulling from the head of the queue.  As we make the
-            // callbacks, more entries might be added to the queue, so keep
-            // pulling until the queue is empty
-            while (this.calls.length > 0) {
-                const bufferedCall = this.calls.shift();
-                if (bufferedCall != null) {
-                    this.callsByKey.delete(bufferedCall.key);
-                    bufferedCall.call();
-                }
-            }
-        }
-        finally {
-            this.flushing = oldFlushing;
-        }
-    }
-    // Searches through the given array, assumed to be sorted in
-    // prioirty order (highest to lowest), and returns the point where
-    // the given call should be inserted such that the list remains
-    // sorted by priority, and the new call will come after any other
-    // calls with the same priority.
-    static getInsertionPoint(arr, entry) {
-        // Binary search
-        const entryPriority = entry.priority;
-        let min = -1;
-        let max = arr.length;
-        while (min < (max - 1)) {
-            const mid = Math.floor((min + max) / 2);
-            const midEntry = arr[mid];
-            const midPriority = midEntry.priority;
-            if (midPriority < entryPriority) {
-                max = mid;
-            }
-            else {
-                min = mid;
-            }
-        }
-        return max;
-    }
-    // Registers the given function to be buffered for calling later.
-    // If a function has already been registered with the given key,
-    // this call is ignored
-    static bufferCall(key, f, priority = 0) {
-        SINGLETON.add(key, f, priority);
-    }
-    // Calls all of the buffered functions, sorted first by priority
-    // order, then by the order they were added.  If more buffered calls
-    // are made while flushing, they will be gathered and flushed as
-    // well, after all of the current buffered calls are flushed.
-    static flushBufferedCalls() {
-        SINGLETON.flush();
-    }
-    // Adds a buffered call for an immutable tracker, which should come
-    // after computed properties but before the default
-    static bufferImmutableTrackerCall(key, f) {
-        RMBufferedCalls.bufferCall(key, f, IMMUTABLE_TRACKER_PRIORITY);
-    }
-    // Adds a buffered call for a computed property, which should come
-    // before immutable property calls
-    static bufferComputedPropertyCall(key, f) {
-        RMBufferedCalls.bufferCall(key, f, COMPUTED_PROPERTY_PRIORITY);
-    }
-}
-const SINGLETON = new RMBufferedCalls();
-const COMPUTED_PROPERTY_PRIORITY = 20;
-const IMMUTABLE_TRACKER_PRIORITY = 10;
 
 // Represents one ChangeListener registered with a node, with a set of
 // options
@@ -244,6 +123,83 @@ class RMChangeListener {
             return false;
         }
         return true;
+    }
+}
+
+// The handler that intercepts calls to get, set, or delete properties
+// on an underlying object, passing those calls through to the RMNode
+// representing that object.
+//
+// The Proxy has a special designated property (RMOBJECTPROXY_NODEKEY)
+// which provides access back to the RMNode
+class RMProxy {
+    constructor(node) {
+        this.node = node;
+    }
+    // Proxies property getters to the RMNode.  The special
+    // RMOBJECTPROXY_NODEKEY symbol is used to access the RMNode from
+    // the proxy (and to identify that the object is actually a proxy)
+    get(target, property) {
+        if (property === RMPROXY_NODEKEY) {
+            return this.node;
+        }
+        else {
+            return this.node.proxyGet(property);
+        }
+    }
+    // Proxies property setters to the RMNode.
+    set(target, property, value) {
+        return this.node.proxySet(property, value);
+    }
+    // Proxies property delections to the RMNode
+    deleteProperty(target, property) {
+        return this.node.proxyDelete(property);
+    }
+    //--------------------------------------------------
+    // FIXME - are these still needed?
+    //  // Returns true if the given value is the proxy representation for a
+    //  // value managed by RModel
+    //  static isRMProxy(value/*:?any*/)/*:boolean*/ {
+    //    return RMProxy.getRMNode(value) != null
+    //  }
+    //
+    //  // Returns the RMNode associated with the proxy representation of an
+    //  // RModel-managed value, or null if the value is not managed by
+    //  // RModel
+    //  static getRMNode(value/*:?any*/)/*:?RMNode*/ {
+    //    return (value instanceof Object) ? this.getRMNodeForObject(value) : null
+    //  }
+    // Returns the RMNode associated with the proxy representation of an
+    // RModel-managed value, or null if the value is not managed by
+    // RModel
+    static getNode(obj) {
+        return obj[RMPROXY_NODEKEY];
+    }
+}
+const RMPROXY_NODEKEY = Symbol('RMPROXY_NODEKEY');
+
+// A reference from one object to another in the same tree,
+// represented as a referrer, and the property on the referrer.
+class RMReference {
+    constructor(referrer, property) {
+        this.referrer = referrer;
+        this.property = property;
+    }
+    // Returns true if the given ref equals this reference
+    equals(ref) {
+        return ref != null && this.matches(ref.referrer, ref.property);
+    }
+    // Returns true if the given ref has the same values as this
+    // reference
+    matches(referrer, property) {
+        return this.referrer == referrer && this.property == property;
+    }
+    // "Disconnects" this reference by setting the referrer's property
+    // to null
+    disconnect() {
+        // to satisfy TypeScript
+        const p = this.referrer.proxy;
+        p[this.property] = null;
     }
 }
 
@@ -672,7 +628,7 @@ class RMDependencyTrackers {
     // RMDependencyTracker is then returned.
     static trackDependencies(f) {
         const ret = new RMDependencyTracker();
-        const g = SINGLETON$1;
+        const g = SINGLETON;
         g.dependencyTrackers.push(ret);
         try {
             f();
@@ -685,7 +641,7 @@ class RMDependencyTrackers {
     // Returns the RMDependencyTracker that is currently in effect, null
     // if none
     static get current() {
-        const g = SINGLETON$1;
+        const g = SINGLETON;
         if (g.dependencyTrackers.length == 0) {
             return null;
         }
@@ -742,7 +698,128 @@ class RMDependencyTrackers {
         }
     }
 }
-const SINGLETON$1 = new RMDependencyTrackers();
+const SINGLETON = new RMDependencyTrackers();
+
+// Represents one call buffered by RMBufferedCalls
+class RMBufferedCall {
+    constructor(key, call, priority) {
+        this.key = key;
+        this.call = call;
+        this.priority = priority;
+    }
+}
+
+// Manages a list of "buffered" calls - that is, function calls that
+class RMBufferedCalls {
+    constructor() {
+        this.calls = [];
+        this.callsByKey = new Map();
+        this.flushing = false;
+        this.flushCall = () => this.flush();
+    }
+    // Registers the given function to be buffered for calling later.
+    // If a function has already been registered with the given key,
+    // this call is ignored
+    add(key, f, priority = 0) {
+        if (this.callsByKey.has(key)) {
+            return;
+        }
+        // If we're about to add a call to an empty list then register a
+        // callback to make sure the call is flushed at the end of the
+        // current "tick" unless we're already in the middle of a flush()
+        // call, in which case the registered call will be picked up by
+        // that call
+        if (this.calls.length == 0 && !this.flushing) {
+            this.registerFlushCallback();
+        }
+        // Add the call - sort it into the list by priority order, making
+        // sure it comes after any other items of the same priority
+        const bufferedCall = new RMBufferedCall(key, f, priority);
+        const insertionPoint = RMBufferedCalls.getInsertionPoint(this.calls, bufferedCall);
+        this.calls.splice(insertionPoint, 0, bufferedCall);
+        this.callsByKey.set(key, bufferedCall);
+    }
+    // Registers a call with the system to flush the buffered calls when
+    // the next "tick" occurs
+    registerFlushCallback() {
+        // FIXME - check the environment to make sure we're using the
+        // right call: nextTick, setImmediate, setTimeout(0), etc.
+        process.nextTick(this.flushCall);
+    }
+    // Calls all of the buffered functions, sorted first by priority
+    // order, then sorted by the order they were added.  If more
+    // buffered calls are made while flushing, they will be gathered and
+    // flushed as well, after all of the current buffered calls are
+    // flushed.
+    flush() {
+        const oldFlushing = this.flushing;
+        this.flushing = true;
+        try {
+            // Keep pulling from the head of the queue.  As we make the
+            // callbacks, more entries might be added to the queue, so keep
+            // pulling until the queue is empty
+            while (this.calls.length > 0) {
+                const bufferedCall = this.calls.shift();
+                if (bufferedCall != null) {
+                    this.callsByKey.delete(bufferedCall.key);
+                    bufferedCall.call();
+                }
+            }
+        }
+        finally {
+            this.flushing = oldFlushing;
+        }
+    }
+    // Searches through the given array, assumed to be sorted in
+    // prioirty order (highest to lowest), and returns the point where
+    // the given call should be inserted such that the list remains
+    // sorted by priority, and the new call will come after any other
+    // calls with the same priority.
+    static getInsertionPoint(arr, entry) {
+        // Binary search
+        const entryPriority = entry.priority;
+        let min = -1;
+        let max = arr.length;
+        while (min < (max - 1)) {
+            const mid = Math.floor((min + max) / 2);
+            const midEntry = arr[mid];
+            const midPriority = midEntry.priority;
+            if (midPriority < entryPriority) {
+                max = mid;
+            }
+            else {
+                min = mid;
+            }
+        }
+        return max;
+    }
+    // Registers the given function to be buffered for calling later.
+    // If a function has already been registered with the given key,
+    // this call is ignored
+    static bufferCall(key, f, priority = 0) {
+        SINGLETON$1.add(key, f, priority);
+    }
+    // Calls all of the buffered functions, sorted first by priority
+    // order, then by the order they were added.  If more buffered calls
+    // are made while flushing, they will be gathered and flushed as
+    // well, after all of the current buffered calls are flushed.
+    static flushBufferedCalls() {
+        SINGLETON$1.flush();
+    }
+    // Adds a buffered call for an immutable tracker, which should come
+    // after computed properties but before the default
+    static bufferImmutableTrackerCall(key, f) {
+        RMBufferedCalls.bufferCall(key, f, IMMUTABLE_TRACKER_PRIORITY);
+    }
+    // Adds a buffered call for a computed property, which should come
+    // before immutable property calls
+    static bufferComputedPropertyCall(key, f) {
+        RMBufferedCalls.bufferCall(key, f, COMPUTED_PROPERTY_PRIORITY);
+    }
+}
+const SINGLETON$1 = new RMBufferedCalls();
+const COMPUTED_PROPERTY_PRIORITY = 20;
+const IMMUTABLE_TRACKER_PRIORITY = 10;
 
 // Manages a mechanism which calls a function to compute a value, then
 class RMComputedProperty {
@@ -813,96 +890,6 @@ class RMComputedProperty {
     }
 }
 
-// Represents one FindByIdChangeListener registered with a node
-// (typically registered with the root node)
-class RMFindByIdChangeListener {
-    constructor(listener, id) {
-        this.listener = listener;
-        this.id = id;
-    }
-    // Returns true if the given listener matches this listener and id
-    matches(listener, id) {
-        return this.listener == listener && this.id == id;
-    }
-}
-
-// The handler that intercepts calls to get, set, or delete properties
-// on an underlying object, passing those calls through to the RMNode
-// representing that object.
-//
-// The Proxy has a special designated property (RMOBJECTPROXY_NODEKEY)
-// which provides access back to the RMNode
-class RMProxy {
-    constructor(node) {
-        this.node = node;
-    }
-    // Proxies property getters to the RMNode.  The special
-    // RMOBJECTPROXY_NODEKEY symbol is used to access the RMNode from
-    // the proxy (and to identify that the object is actually a proxy)
-    get(target, property) {
-        if (property === RMPROXY_NODEKEY) {
-            return this.node;
-        }
-        else {
-            return this.node.proxyGet(property);
-        }
-    }
-    // Proxies property setters to the RMNode.
-    set(target, property, value) {
-        return this.node.proxySet(property, value);
-    }
-    // Proxies property delections to the RMNode
-    deleteProperty(target, property) {
-        return this.node.proxyDelete(property);
-    }
-    //--------------------------------------------------
-    // FIXME - are these still needed?
-    //  // Returns true if the given value is the proxy representation for a
-    //  // value managed by RModel
-    //  static isRMProxy(value/*:?any*/)/*:boolean*/ {
-    //    return RMProxy.getRMNode(value) != null
-    //  }
-    //
-    //  // Returns the RMNode associated with the proxy representation of an
-    //  // RModel-managed value, or null if the value is not managed by
-    //  // RModel
-    //  static getRMNode(value/*:?any*/)/*:?RMNode*/ {
-    //    return (value instanceof Object) ? this.getRMNodeForObject(value) : null
-    //  }
-    // Returns the RMNode associated with the proxy representation of an
-    // RModel-managed value, or null if the value is not managed by
-    // RModel
-    static getNode(obj) {
-        return obj[RMPROXY_NODEKEY];
-    }
-}
-const RMPROXY_NODEKEY = Symbol('RMPROXY_NODEKEY');
-
-// A reference from one object to another in the same tree,
-// represented as a referrer, and the property on the referrer.
-class RMReference {
-    constructor(referrer, property) {
-        this.referrer = referrer;
-        this.property = property;
-    }
-    // Returns true if the given ref equals this reference
-    equals(ref) {
-        return ref != null && this.matches(ref.referrer, ref.property);
-    }
-    // Returns true if the given ref has the same values as this
-    // reference
-    matches(referrer, property) {
-        return this.referrer == referrer && this.property == property;
-    }
-    // "Disconnects" this reference by setting the referrer's property
-    // to null
-    disconnect() {
-        // to satisfy TypeScript
-        const p = this.referrer.proxy;
-        p[this.property] = null;
-    }
-}
-
 // Represents one RootChangeListener registered with a node
 class RMRootChangeListener {
     constructor(listener) {
@@ -944,6 +931,19 @@ class RMIdChangeListener {
     // Returns true if the given listener matches this listener
     matches(listener) {
         return this.listener == listener;
+    }
+}
+
+// Represents one FindByIdChangeListener registered with a node
+// (typically registered with the root node)
+class RMFindByIdChangeListener {
+    constructor(listener, id) {
+        this.listener = listener;
+        this.id = id;
+    }
+    // Returns true if the given listener matches this listener and id
+    matches(listener, id) {
+        return this.listener == listener && this.id == id;
     }
 }
 
@@ -3312,35 +3312,75 @@ class RMGlobal {
     }
 }
 
-// FIXME - this is just temporary
-var rmodel = {
-    RMArrayPopProxy,
-    RMArrayPushProxy,
-    RMArrayShiftProxy,
-    RMArraySpliceProxy,
-    RMArrayUnshiftProxy,
-    RMBufferedCall,
-    RMBufferedCalls,
-    RMChangeListener,
-    RMComputedProperty,
-    RMDependency,
-    RMDependencyTracker,
-    RMDependencyTrackers,
-    RMFindByIdChangeListener,
-    RMFindByIdDependency: RMIdDependency$1,
-    RMGlobal,
-    RMImmutableTracker,
-    RMIdChangeListener,
-    RMIdDependency,
-    RMParentChangeListener,
-    RMParentDependency,
-    RMPropertyDependency,
-    RMPropertyNameChangeListener,
-    RMPropertyNameDependency,
-    RMProxy,
-    RMReference,
-    RMRootChangeListener,
-    RMRootDependency,
+// The main entry point into the RModel API.  An application will
+// The main function used to enable a value for RModel use
+const rmodelFunc = function (value) {
+    return RMGlobal.toRModel(value);
 };
+// The API methods are attached to the main function
+const rmodelApi = {
+    isRoot: function (value) {
+        return RMGlobal.isRoot(value);
+    },
+    root: function (value) {
+        return RMGlobal.getRoot(value);
+    },
+    parent: function (value) {
+        return RMGlobal.getParent(value);
+    },
+    property: function (value) {
+        return RMGlobal.getProperty(value);
+    },
+    primaryReference: function (value) {
+        return RMGlobal.getPrimaryReference(value);
+    },
+    secondaryReferences: function (value) {
+        return RMGlobal.getSecondaryReferences(value);
+    },
+    hasRModel: function (value) {
+        return RMGlobal.hasRModel(value);
+    },
+    managedValue: function (value) {
+        return RMGlobal.getManagedValue(value);
+    },
+    addChangeListener: function (value, listener, options = null) {
+        return RMGlobal.addChangeListener(value, listener, options);
+    },
+    removeChangeListener: function (value, listener, options = null) {
+        return RMGlobal.removeChangeListener(value, listener, options);
+    },
+    findDependencies: function (func) {
+        return RMGlobal.findDependencies(func);
+    },
+    bufferCall: function (key, f) {
+        RMGlobal.bufferCall(key, f);
+    },
+    flushBufferedCalls: function () {
+        RMGlobal.flushBufferedCalls();
+    },
+    addComputedProperty: function (value, property, f, options = null) {
+        RMGlobal.addComputedProperty(value, property, f, options);
+    },
+    removeComputedProperty: function (value, property) {
+        RMGlobal.removeComputedProperty(value, property);
+    },
+    setId: function (value, id) {
+        RMGlobal.setId(value, id);
+    },
+    getId: function (value) {
+        return RMGlobal.getId(value);
+    },
+    deleteId: function (value) {
+        return RMGlobal.deleteId(value);
+    },
+    findById: function (value, id) {
+        return RMGlobal.findById(value, id);
+    },
+    setImmutable: function (value, listener) {
+        return RMGlobal.setImmutable(value, listener);
+    },
+};
+// Combine the main function with the API
+const rmodel = Object.assign(rmodelFunc, rmodelApi);
 
 module.exports = rmodel;
