@@ -3,6 +3,7 @@
 import RMDependency from './RMDependency'
 import RMNode from './RMNode'
 import {Dependency} from './Types'
+import {PropertyDependency} from './Types'
 import {ChangeListenerOptions} from './Types'
 
 export default class RMPropertyDependency extends RMDependency {
@@ -16,11 +17,12 @@ export default class RMPropertyDependency extends RMDependency {
 
   // Converts this to an application-visible Dependency
   toDependency(toExternalValue: (node:RMNode)=>object): Dependency {
-    return {
+    const ret:PropertyDependency = {
       type: 'PropertyDependency',
       target: toExternalValue(this.target),
       property: this.property
     }
+    return ret
   }
 
   // Returns true if the given property dependency matches this

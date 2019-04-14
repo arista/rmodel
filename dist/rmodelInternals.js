@@ -1,3 +1,5 @@
+'use strict';
+
 // A proxy for the Array.push function which passes its calls to the
 // RMNode
 class RMArrayPushProxy {
@@ -3387,4 +3389,14 @@ const rmodelApi = {
 // Combine the main function with the API
 const rmodel = Object.assign(rmodelFunc, rmodelApi);
 
-export default rmodel;
+// An alternative packaging of RModel that provides direct access to
+var rmodelInternals = {
+    RModel: rmodel,
+    RMNode,
+    RMProxy,
+    RMChangeListener,
+    RMBufferedCalls,
+    RMBufferedCall,
+};
+
+module.exports = rmodelInternals;

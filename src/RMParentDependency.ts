@@ -2,6 +2,7 @@
 
 import RMDependency from './RMDependency'
 import RMNode from './RMNode'
+import {ParentDependency} from './Types'
 import {Dependency} from './Types'
 
 export default class RMParentDependency extends RMDependency {
@@ -13,10 +14,11 @@ export default class RMParentDependency extends RMDependency {
 
   // Converts this to an application-visible Dependency
   toDependency(toExternalValue: (node:RMNode)=>object): Dependency {
-    return {
+    const ret:ParentDependency = {
       type: 'ParentDependency',
       target: toExternalValue(this.target)
     }
+    return ret
   }
 
   // Returns true if the given parent dependency matches this

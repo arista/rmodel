@@ -2,6 +2,7 @@
 
 import RMDependency from './RMDependency'
 import RMNode from './RMNode'
+import {IdDependency} from './Types'
 import {Dependency} from './Types'
 
 export default class RMIdDependency extends RMDependency {
@@ -13,10 +14,11 @@ export default class RMIdDependency extends RMDependency {
 
   // Converts this to an application-visible Dependency
   toDependency(toExternalValue: (node:RMNode)=>object): Dependency {
-    return {
+    const ret:IdDependency = {
       type: 'IdDependency',
       target: toExternalValue(this.target)
     }
+    return ret
   }
 
   // Returns true if the given id dependency matches this

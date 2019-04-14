@@ -3,6 +3,7 @@
 
 import RMDependency from './RMDependency'
 import RMNode from './RMNode'
+import {FindByIdDependency} from './Types'
 import {Dependency} from './Types'
 
 export default class RMIdDependency extends RMDependency {
@@ -16,11 +17,12 @@ export default class RMIdDependency extends RMDependency {
 
   // Converts this to an application-visible Dependency
   toDependency(toExternalValue: (node:RMNode)=>object): Dependency {
-    return {
+    const ret:FindByIdDependency = {
       type: 'FindByIdDependency',
       target: toExternalValue(this.target),
       id: this.id
     }
+    return ret
   }
 
   // Returns true if the given findById dependency matches this

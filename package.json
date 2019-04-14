@@ -11,10 +11,15 @@
   "types": "dist/rmodel.d.ts",
   "scripts": {
     "start": "npm run build && node dist/rmodel.js",
-    "build": "rollup -c",
-    "watch": "rollup -cw"
+    "build": "npm run rollup",
+    "watch": "rollup -cw",
+    "test": "npm run rollup && npm run rollupInternals && npm run jasmine",
+    "jasmine": "jasmine JASMINE_CONFIG_PATH=jasmine.json",
+    "rollup": "rollup -c --config rollup.config.js",
+    "rollupInternals": "rollup -c --config rollupInternals.config.js"
   },
   "devDependencies": {
+    "jasmine": "^3.4.0",
     "rollup": "^1.8.0",
     "rollup-plugin-typescript2": "^0.20.1",
     "typescript": "^3.4.1"

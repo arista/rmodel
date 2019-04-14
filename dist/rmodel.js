@@ -256,11 +256,12 @@ class RMPropertyDependency extends RMDependency {
     }
     // Converts this to an application-visible Dependency
     toDependency(toExternalValue) {
-        return {
+        const ret = {
             type: 'PropertyDependency',
             target: toExternalValue(this.target),
             property: this.property
         };
+        return ret;
     }
     // Returns true if the given property dependency matches this
     matchesPropertyDependency(node, property) {
@@ -308,10 +309,11 @@ class RMRootDependency extends RMDependency {
     }
     // Converts this to an application-visible Dependency
     toDependency(toExternalValue) {
-        return {
+        const ret = {
             type: 'RootDependency',
             target: toExternalValue(this.target)
         };
+        return ret;
     }
     // Returns true if the given root dependency matches this
     matchesRootDependency(node) {
@@ -339,10 +341,11 @@ class RMParentDependency extends RMDependency {
     }
     // Converts this to an application-visible Dependency
     toDependency(toExternalValue) {
-        return {
+        const ret = {
             type: 'ParentDependency',
             target: toExternalValue(this.target)
         };
+        return ret;
     }
     // Returns true if the given parent dependency matches this
     matchesParentDependency(node) {
@@ -370,10 +373,11 @@ class RMPropertyNameDependency extends RMDependency {
     }
     // Converts this to an application-visible Dependency
     toDependency(toExternalValue) {
-        return {
+        const ret = {
             type: 'PropertyNameDependency',
             target: toExternalValue(this.target)
         };
+        return ret;
     }
     // Returns true if the given propertyName dependency matches this
     matchesPropertyNameDependency(node) {
@@ -401,10 +405,11 @@ class RMIdDependency extends RMDependency {
     }
     // Converts this to an application-visible Dependency
     toDependency(toExternalValue) {
-        return {
+        const ret = {
             type: 'IdDependency',
             target: toExternalValue(this.target)
         };
+        return ret;
     }
     // Returns true if the given id dependency matches this
     matchesIdDependency(node) {
@@ -433,11 +438,12 @@ class RMIdDependency$1 extends RMDependency {
     }
     // Converts this to an application-visible Dependency
     toDependency(toExternalValue) {
-        return {
+        const ret = {
             type: 'FindByIdDependency',
             target: toExternalValue(this.target),
             id: this.id
         };
+        return ret;
     }
     // Returns true if the given findById dependency matches this
     matchesFindByIdDependency(node, id) {

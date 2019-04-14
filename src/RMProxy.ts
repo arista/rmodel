@@ -17,7 +17,7 @@ export default class RMProxy {
   // Proxies property getters to the RMNode.  The special
   // RMOBJECTPROXY_NODEKEY symbol is used to access the RMNode from
   // the proxy (and to identify that the object is actually a proxy)
-  get (target: object, property: (string | Symbol)): any | null {
+  get (target: object, property: (string | symbol)): any | null {
     if(property === RMPROXY_NODEKEY) {
       return this.node
     }
@@ -27,12 +27,12 @@ export default class RMProxy {
   }
 
   // Proxies property setters to the RMNode.
-  set (target: object, property: (string | Symbol), value: any | null): boolean {
+  set (target: object, property: (string | symbol), value: any | null): boolean {
     return this.node.proxySet(property, value)
   }
 
   // Proxies property delections to the RMNode
-  deleteProperty (target: object, property: (string | Symbol)): boolean {
+  deleteProperty (target: object, property: (string | symbol)): boolean {
     return this.node.proxyDelete(property)
   }
 
