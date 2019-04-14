@@ -9,10 +9,12 @@ export interface Reference {
 }
 
 // An event fired when a change is made to a managed object
-export type ChangeEvent = PropertyChange | ArrayChange
+export interface ChangeEvent {
+  type: string
+}
 
 // An event fired when a property's value changes
-export interface PropertyChange {
+export interface PropertyChange extends ChangeEvent {
   type: 'PropertyChange'
 
   // The object whose property is being changed
@@ -54,7 +56,7 @@ export interface PropertyChange {
 // pop, shift, unshift, splice).  Rather than representing the
 // operation as an equivalent series of PropertyChanges, the operation
 // is represented by a single event.
-export interface ArrayChange {
+export interface ArrayChange extends ChangeEvent {
   type: 'ArrayChange'
   target: Array<any | null>
   index: number
@@ -97,11 +99,13 @@ export type EventSource =
   'descendants'
 
 // Represents one dependency found while calling RModel.findDependencies
-export type Dependency = PropertyDependency | RootDependency | ParentDependency | PropertyNameDependency | IdDependency | FindByIdDependency
+export interface Dependency {
+  type: string
+}
 
 // Indicates that a computation depends on the specified property of
 // the specified object
-export interface PropertyDependency {
+export interface PropertyDependency extends Dependency {
   type: 'PropertyDependency'
   target: object
   property: string
@@ -109,35 +113,35 @@ export interface PropertyDependency {
 
 // Indicates that a computation depends on RModel.root() of the
 // specified object
-export interface RootDependency {
+export interface RootDependency extends Dependency {
   type: 'RootDependency'
   target: object
 }
 
 // Indicates that a computation depends on RModel.parent() of the
 // specified object
-export interface ParentDependency {
+export interface ParentDependency extends Dependency {
   type: 'ParentDependency'
   target: object
 }
 
 // Indicates that a computation depends on RModel.property() of the
 // specified object
-export interface PropertyNameDependency {
+export interface PropertyNameDependency extends Dependency {
   type: 'PropertyNameDependency'
   target: object
 }
 
 // Indicates that a computation depends on RModel.id() of the
 // specified object
-export interface IdDependency {
+export interface IdDependency extends Dependency {
   type: 'IdDependency'
   target: object
 }
 
 // Indicates that a computation depends on RModel.findById() of the
 // specified object
-export interface FindByIdDependency {
+export interface FindByIdDependency extends Dependency {
   type: 'FindByIdDependency'
   target: object
   id: string

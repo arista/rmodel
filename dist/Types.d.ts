@@ -2,8 +2,10 @@ export interface Reference {
     referrer: object;
     property: string;
 }
-export declare type ChangeEvent = PropertyChange | ArrayChange;
-export interface PropertyChange {
+export interface ChangeEvent {
+    type: string;
+}
+export interface PropertyChange extends ChangeEvent {
     type: 'PropertyChange';
     target: object;
     property: string;
@@ -14,7 +16,7 @@ export interface PropertyChange {
     added: Array<object> | null;
     removed: Array<object> | null;
 }
-export interface ArrayChange {
+export interface ArrayChange extends ChangeEvent {
     type: 'ArrayChange';
     target: Array<any | null>;
     index: number;
@@ -33,29 +35,31 @@ export interface ChangeListenerOptions {
     source?: EventSource | null;
 }
 export declare type EventSource = 'self' | 'children' | 'descendants';
-export declare type Dependency = PropertyDependency | RootDependency | ParentDependency | PropertyNameDependency | IdDependency | FindByIdDependency;
-export interface PropertyDependency {
+export interface Dependency {
+    type: string;
+}
+export interface PropertyDependency extends Dependency {
     type: 'PropertyDependency';
     target: object;
     property: string;
 }
-export interface RootDependency {
+export interface RootDependency extends Dependency {
     type: 'RootDependency';
     target: object;
 }
-export interface ParentDependency {
+export interface ParentDependency extends Dependency {
     type: 'ParentDependency';
     target: object;
 }
-export interface PropertyNameDependency {
+export interface PropertyNameDependency extends Dependency {
     type: 'PropertyNameDependency';
     target: object;
 }
-export interface IdDependency {
+export interface IdDependency extends Dependency {
     type: 'IdDependency';
     target: object;
 }
-export interface FindByIdDependency {
+export interface FindByIdDependency extends Dependency {
     type: 'FindByIdDependency';
     target: object;
     id: string;
