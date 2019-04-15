@@ -561,6 +561,18 @@ describe('RModel computed properties', ()=>{
       RModel.flushBufferedCalls()
       expect(rmodels.obj1.sum).toBe(45)
     })
+    it('setting in nested value should be equivalent to adding computed property', ()=>{
+      const computeds = {
+        p: RModel.computed(v=>RModel.parent(v)),
+        sum: RModel.computed(v=>v.p && (v.p.w + v.p.x + v.p.y)),
+      }
+      rmodels.obj1.computeds = computeds
+      expect(rmodels.obj1.computeds.sum).toBe(35)
+      rmodels.obj1.x = 20
+      expect(rmodels.obj1.computeds.sum).toBe(35)
+      RModel.flushBufferedCalls()
+      expect(rmodels.obj1.computeds.sum).toBe(45)
+    })
     it('assigning as part of object initializer should be equivalent to adding computed property', ()=>{
       const r = RModel({
         x: 10,
@@ -572,6 +584,25 @@ describe('RModel computed properties', ()=>{
       expect(r.sum).toBe(30)
       RModel.flushBufferedCalls()
       expect(r.sum).toBe(25)
+    })
+    it('assigning as part of a nested object initializer should be equivalent to adding computed property', ()=>{
+      const r = RModel({
+        x: 10,
+        y: 20,
+        computeds: {
+          p: RModel.computed(v=>RModel.parent(v)),
+          sum: RModel.computed(v=>v.p && (v.p.x + v.p.y)),
+          difference: RModel.computed(v=>v.p && (v.p.x - v.p.y)),
+        }
+      })
+      expect(r.computeds.sum).toBe(30)
+      expect(r.computeds.difference).toBe(-10)
+      r.x = 5
+      expect(r.computeds.difference).toBe(-10)
+      expect(r.computeds.sum).toBe(30)
+      RModel.flushBufferedCalls()
+      expect(r.computeds.difference).toBe(-15)
+      expect(r.computeds.sum).toBe(25)
     })
     it('should respect the immediate option', ()=>{
       const r = RModel({
