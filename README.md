@@ -283,6 +283,7 @@ Note that RModel stores the id internally - it is not exposed as a visible prope
 
 The above examples used methods like `RModel.setId`, `RModel.addComputedProperty`, and `RModel.findById`.  Because these methods are used so often, there are shortcuts that allow them to be used directly in object initializers.  The above example can be rewritten like this:
 
+```
 > r = RModel({
       models: {
           [RModel.id]: "models",
@@ -304,6 +305,7 @@ The above examples used methods like `RModel.setId`, `RModel.addComputedProperty
 > r.currentUserDisplay.userId = "47"
 > r.currentUserDisplay.name
 "Fatima"
+```
 
 ## Providing Immutable Values
 
