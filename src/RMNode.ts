@@ -140,8 +140,9 @@ export default class RMNode {
   // listeners
   findByIdChangeListeners: {[key:string]: Array<RMFindByIdChangeListener> | null} | null
 
-  // The immutable copy of the node's value (only used if setImmutable
-  // has been called on this node or one of its ancestors)
+  // The immutable copy of the node's value (only used if
+  // followImmutable has been called on this node or one of its
+  // ancestors)
   immutableValue: object | null
 
   // If this node has an immutableValue, and the node's value has
@@ -2373,7 +2374,7 @@ export default class RMNode {
   // modified so that they point to the new copy - they are also
   // modified by making a shallow copy that is modified.  This
   // continues until the "immutable root" is reached, which is the
-  // node previously designated by calling setImmutable(), at which
+  // node previously designated by calling followImmutable(), at which
   // point the ImmutableListener function is invoked.
   //
   // Because a single operation can modify multiple objects
@@ -2397,10 +2398,10 @@ export default class RMNode {
   // value.
   //
   // This returns the initial immutable copy of the object
-  setImmutable(listener: ImmutableListener): object {
+  followImmutable(listener: ImmutableListener): object {
     if (this.immutableTracker != null) {
       // FIXME test this
-      throw new Error('setImmutable has already been called on this object or one of its ancestors')
+      throw new Error('followImmutable has already been called on this object or one of its ancestors')
     }
 
     // Create the RMImmutableTracker

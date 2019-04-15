@@ -151,9 +151,9 @@ export default class RMGlobal {
     const node = this.requireNodeForValue(value)
     return node.findById(id)
   }
-  static setImmutable(value: any, listener: ImmutableListener): object {
+  static followImmutable(value: any, listener: ImmutableListener): object {
     const node = this.requireNodeForValue(value)
-    return node.setImmutable(listener)
+    return node.followImmutable(listener)
   }
 
   

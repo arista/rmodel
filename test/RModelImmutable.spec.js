@@ -1,6 +1,6 @@
 const RModel = require('../dist/rmodel.js')
 
-// Tests the setImmutable feature
+// Tests the followImmutable feature
 
 describe('RModel immutable', ()=>{
   describe('with an initial structure', ()=>{
@@ -23,7 +23,7 @@ describe('RModel immutable', ()=>{
       let i
       beforeEach(()=>{
         events = []
-        i = RModel.setImmutable(r.root, e=>{events.push(e)})
+        i = RModel.followImmutable(r.root, e=>{events.push(e)})
       })
       it('should match the invariants', ()=>{
         const expected = {
@@ -211,7 +211,7 @@ describe('RModel immutable', ()=>{
           { id: 'cc' },
         ]
       })
-      i = RModel.setImmutable(r, e=>events.push(e))
+      i = RModel.followImmutable(r, e=>events.push(e))
 
       RModel.setId(r.objectById, 'objectById')
       const nameFunc = o => {
