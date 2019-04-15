@@ -374,4 +374,37 @@ describe('RModel id\'s', ()=>{
       })
     })
   })
+
+  describe('RModel.id', ()=>{
+    it('setting that key on an object should set the object\'s RModel id', ()=>{
+      const r = RModel({a: 10, b: 20})
+      expect(RModel.getId(r)).toBe(null)
+      r[RModel.id] = 'abc'
+      expect(RModel.getId(r)).toBe('abc')
+    })
+    it('getting that key from an object should get the object\'s RModel id', ()=>{
+      const r = RModel({a: 10, b: 20})
+      expect(r[RModel.id]).toBe(null)
+      RModel.setId(r, 'abc')
+      expect(r[RModel.id]).toBe('abc')
+    })
+    it('initializing an object with that key should set the object\'s RModel id', ()=>{
+      const r = RModel({
+        [RModel.id]: 'abc',
+        x: 10,
+        y: 20
+      })
+      expect(RModel.getId(r)).toBe('abc')
+    })
+    it('initializing a nested object with that key should set the object\'s RModel id', ()=>{
+      const r = RModel({
+        nested: {
+          [RModel.id]: 'abc',
+          x: 10,
+          y: 20
+        }
+      })
+      expect(RModel.getId(r.nested)).toBe('abc')
+    })
+  })
 })

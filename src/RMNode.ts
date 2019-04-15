@@ -395,6 +395,12 @@ export default class RMNode {
 
   // Called from the proxy to get a property value
   proxyGet(property: (string|symbol)): any | null {
+    // If the property is RMNODE_ID, then this is a shorthand for
+    // getting the RMNode's id
+    if (property == RMNODE_ID) {
+      return this.getId()
+    }
+    
     // If the target is no longer being managed by this RMNode, then
     // try to find the node that is now managing the object and pass
     // the call to it.  Otherwise just pass the call through to the
@@ -456,6 +462,13 @@ export default class RMNode {
     if (value instanceof RMComputed && typeof(property) === 'string') {
       const c = (value as RMComputed<any,any>)
       this.addComputedProperty(property, c.f, c.options)
+      return true
+    }
+
+    // If the property is RMNODE_ID, then this is a shorthand for
+    // setting the RMNode's id
+    if (property == RMNODE_ID) {
+      this.setId(String(value))
       return true
     }
     
@@ -943,6 +956,13 @@ export default class RMNode {
           this.addComputedProperty(property, c.f, c.options)
         }
       }
+    }
+
+    // If RMNODE_ID is set as a property, that's shorthand for setting
+    // the RModel id of the value
+    if (target.hasOwnProperty(RMNODE_ID)) {
+      const id = (target as any)[RMNODE_ID]
+      this.setId(String(id))
     }
   }
 
@@ -2542,3 +2562,6 @@ export default class RMNode {
 
 // The key on an underlying object that refers back to its RMNode
 const RMNODE_KEY = Symbol('RMNODE_KEY')
+
+// The key that, when set on a RModel value, sets the RModel's id
+export const RMNODE_ID = Symbol('RMNODE_ID')
