@@ -92,6 +92,9 @@ const rmodelApi = {
   computed: function<T,R> (f:(obj:T)=>R, options:ComputedPropertyOptions | null = null):object {
     return RMGlobal.computed(f, options)
   },
+  idref: function (id: string):object {
+    return RMGlobal.idref(id)
+  },
 }
 
 // Combine the main function with the API

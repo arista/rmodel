@@ -407,4 +407,41 @@ describe('RModel id\'s', ()=>{
       expect(RModel.getId(r.nested)).toBe('abc')
     })
   })
+
+  describe('RModel.idref', ()=>{
+    it('setting should be equivalent to adding an id-referencing computed property', ()=>{
+      const r = RModel({
+        obj1: {[RModel.id]: 'id1'},
+        obj2: {}
+      })
+      expect(r.obj2.obj1).toBe(undefined)
+      r.obj2.obj1 = RModel.idref('id1')
+      expect(r.obj2.obj1).toBe(r.obj1)
+      r.obj1[RModel.id] = 'id2'
+      RModel.flushBufferedCalls()
+      expect(r.obj2.obj1).toBe(null)
+    })
+    it('assigning as part of an object initializer should be equivalent to adding an id-referencing computed property', ()=>{
+      const r = RModel({
+        obj1: {[RModel.id]: 'id1'},
+        obj2: {obj1: RModel.idref('id1')}
+      })
+      expect(r.obj2.obj1).toBe(r.obj1)
+      r.obj1[RModel.id] = 'id2'
+      RModel.flushBufferedCalls()
+      expect(r.obj2.obj1).toBe(null)
+    })
+    it('assigning as part of a nested object initializer should be equivalent to adding an id-referencing computed property', ()=>{
+      const o = {
+        obj1: {[RModel.id]: 'id1'},
+        obj2: {obj1: RModel.idref('id1')}
+      }
+      const r = RModel({})
+      r.nested = o
+      expect(r.nested.obj2.obj1).toBe(r.nested.obj1)
+      r.nested.obj1[RModel.id] = 'id2'
+      RModel.flushBufferedCalls()
+      expect(r.nested.obj2.obj1).toBe(null)
+    })
+  })
 })

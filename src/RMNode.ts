@@ -25,6 +25,7 @@ import RMArrayShiftProxy from './RMArrayShiftProxy'
 import RMArraySpliceProxy from './RMArraySpliceProxy'
 import RMChangeListener from './RMChangeListener'
 import RMComputed from './RMComputed'
+import RMIdref from './RMIdref'
 import RMProxy from './RMProxy'
 import RMReference from './RMReference'
 import RMDependencyTrackers from './RMDependencyTrackers'
@@ -465,6 +466,13 @@ export default class RMNode {
       return true
     }
 
+    // If the value is an RMIdref, then this is a shortcut for
+    // addIdref
+    if (value instanceof RMIdref && typeof(property) === 'string') {
+      this.addIdref(property, value.id)
+      return true
+    }
+
     // If the property is RMNODE_ID, then this is a shorthand for
     // setting the RMNode's id
     if (property == RMNODE_ID) {
@@ -889,7 +897,7 @@ export default class RMNode {
       const value = (target as any)[property]
 
       // If it's a "shortcut", take note of that
-      if (value instanceof RMComputed) {
+      if (value instanceof RMComputed || value instanceof RMIdref) {
         hadShortcuts = true
       }
 
@@ -954,6 +962,9 @@ export default class RMNode {
         if (value instanceof RMComputed) {
           const c = (value as RMComputed<any,any>)
           this.addComputedProperty(property, c.f, c.options)
+        }
+        else if (value instanceof RMIdref) {
+          this.addIdref(property, value.id)
         }
       }
     }
@@ -2223,6 +2234,12 @@ export default class RMNode {
         }
       }
     }
+  }
+
+  // Shorthand for adding a computed property that computes its value
+  // by calling findById with the given id
+  addIdref(property: string, id: string) {
+    this.addComputedProperty(property, v=>this.findById(id), null)
   }
 
   //--------------------------------------------------

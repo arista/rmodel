@@ -1,5 +1,6 @@
 import RMNode from './RMNode'
 import RMComputed from './RMComputed'
+import RMIdref from './RMIdref'
 import {ChangeListenerOptions} from './Types'
 import {ChangeListener} from './Types'
 import {Reference} from './Types'
@@ -198,6 +199,14 @@ export default class RMGlobal {
   // effectively be treated as adding a computed property.
   static computed<T,R>(f: (obj:T)=>R, options: ComputedPropertyOptions | null = null): RMComputed<T,R> {
     return new RMComputed<T,R>(f, options)
+  }
+
+  // Returns an RMIdref wrapping the given id.  If this RMIdref is
+  // later set as a property value, then it will be effectively be
+  // treated as adding a computed property whose value is the
+  // "findById" of the given id
+  static idref(id: string): RMIdref {
+    return new RMIdref(id)
   }
 }
 
