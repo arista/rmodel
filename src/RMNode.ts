@@ -24,6 +24,7 @@ import RMArrayUnshiftProxy from './RMArrayUnshiftProxy'
 import RMArrayShiftProxy from './RMArrayShiftProxy'
 import RMArraySpliceProxy from './RMArraySpliceProxy'
 import RMChangeListener from './RMChangeListener'
+import RMComputed from './RMComputed'
 import RMProxy from './RMProxy'
 import RMReference from './RMReference'
 import RMDependencyTrackers from './RMDependencyTrackers'
@@ -157,9 +158,6 @@ export default class RMNode {
     this.disconnected = false
     this._root = this
     this.proxyHandler = new RMProxy(this)
-    // We need to do this to satisfy Flow, which complains about the
-    // proxyHandler's defining get, set, etc. when it's supposed to be
-    // read-only
     const handler: any = this.proxyHandler
     this.proxy = new Proxy(target, handler)
     this.primaryReference = null
@@ -453,6 +451,14 @@ export default class RMNode {
 
   // Called from the proxy to set a property value
   proxySet(property: (string|symbol), value: any | null): boolean {
+    // If the value is an RMComputed, then this is a shortcut for
+    // addComputedProperty
+    if (value instanceof RMComputed && typeof(property) === 'string') {
+      const c = (value as RMComputed<any,any>)
+      this.addComputedProperty(property, c.f, c.options)
+      return true
+    }
+    
     // If the target is no longer being managed by this RMNode, then
     // try to find the node that is now managing the object and pass
     // the call to it.  Otherwise just pass the call through to the
@@ -860,11 +866,21 @@ export default class RMNode {
   processChildren(added: Array<RMNode> | null = null) {
     const target = this.target
     const root = this.root
-    
+
+    // Flag indicating if any "shortcuts" were encountered, such as
+    // RMComputed or RMFindById
+    let hadShortcuts: boolean = false
+
     // Go through the object children
     for (const property in target) {
       const value = (target as any)[property]
-      if (value instanceof Object) {
+
+      // If it's a "shortcut", take note of that
+      if (value instanceof RMComputed) {
+        hadShortcuts = true
+      }
+
+      else if (value instanceof Object) {
         const childNode = RMNode.getNodeForObject(value)
 
         // If the child doesn't have an RMNode, create one, set this
@@ -913,6 +929,18 @@ export default class RMNode {
           // FIXME - better exception, including the attempted path to
           // the child and its existing path
           throw new Error('Attempt to add child from another tree')
+        }
+      }
+    }
+
+    // If any values were "shortcuts", then walk through the list
+    // again
+    if (hadShortcuts) {
+      for (const property in target) {
+        const value = (target as any)[property]
+        if (value instanceof RMComputed) {
+          const c = (value as RMComputed<any,any>)
+          this.addComputedProperty(property, c.f, c.options)
         }
       }
     }
@@ -1160,7 +1188,6 @@ export default class RMNode {
     if (insertCount != 0 || deleteCount != 0) {
       const listeners = this.getInterestedArrayChangeListeners()
       if (listeners != null) {
-        // We need to do this to satisfy flow
         const eventTarget: any = this.proxy
         const event = {
           type: 'ArrayChange',
@@ -2392,8 +2419,6 @@ export default class RMNode {
   // Creates a new object that can be used as a copy of the given
   // object
   prepareImmutableCopy(obj: object): object {
-    // Without the "any", flow complains about treating Array as an
-    // object, and assigning RMNODE_KEY
     const ret: any = (Array.isArray(obj)) ? Array(obj.length) : {}
 
     // Set the immutable node to point back to this node, so that

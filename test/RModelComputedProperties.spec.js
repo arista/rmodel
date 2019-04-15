@@ -552,6 +552,41 @@ describe('RModel computed properties', ()=>{
     })
   })
 
+  describe('RModel.computed', ()=>{
+    it('setting should be equivalent to adding computed property', ()=>{
+      rmodels.obj1.sum = RModel.computed(v=>v.w + v.x + v.y)
+      expect(rmodels.obj1.sum).toBe(35)
+      rmodels.obj1.x = 20
+      expect(rmodels.obj1.sum).toBe(35)
+      RModel.flushBufferedCalls()
+      expect(rmodels.obj1.sum).toBe(45)
+    })
+    it('assigning as part of object initializer should be equivalent to adding computed property', ()=>{
+      const r = RModel({
+        x: 10,
+        y: 20,
+        sum: RModel.computed(v=>v.x + v.y)
+      })
+      expect(r.sum).toBe(30)
+      r.x = 5
+      expect(r.sum).toBe(30)
+      RModel.flushBufferedCalls()
+      expect(r.sum).toBe(25)
+    })
+    it('should respect the immediate option', ()=>{
+      const r = RModel({
+        x: 10,
+        y: 20,
+        sum: RModel.computed(v=>v.x + v.y, {immediate: true})
+      })
+      expect(r.sum).toBe(30)
+      r.x = 5
+      expect(r.sum).toBe(25)
+      RModel.flushBufferedCalls()
+      expect(r.sum).toBe(25)
+    })
+  })
+  
   // removing an object should remove its computed properties and listeners
 
   // FIXME - test that a removed object is disconnected

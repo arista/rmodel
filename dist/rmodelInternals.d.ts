@@ -25,6 +25,7 @@ declare const _default: {
         deleteId: (value: any) => void;
         findById: (value: any, id: string) => object | null;
         setImmutable: (value: any, listener: import("./Types").ImmutableListener) => object;
+        computed: <T, R>(f: (obj: T) => R, options?: import("./Types").ComputedPropertyOptions | null) => object;
     };
     RMNode: typeof RMNode;
     RMProxy: typeof RMProxy;

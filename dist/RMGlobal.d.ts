@@ -1,4 +1,5 @@
 import RMNode from './RMNode';
+import RMComputed from './RMComputed';
 import { ChangeListenerOptions } from './Types';
 import { ChangeListener } from './Types';
 import { Reference } from './Types';
@@ -31,4 +32,5 @@ export default class RMGlobal {
     static requireConnectedOrDisconnectedNodeForValue(value: any): RMNode;
     static getObjectForNode(node: RMNode | null): object | null;
     static requireObjectForNode(node: RMNode): object;
+    static computed<T, R>(f: (obj: T) => R, options?: ComputedPropertyOptions | null): RMComputed<T, R>;
 }
