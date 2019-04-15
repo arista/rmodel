@@ -1,6 +1,5 @@
-// @flow
-
 import RMNode from './RMNode'
+import RMComputed from './RMComputed'
 import {ChangeListenerOptions} from './Types'
 import {ChangeListener} from './Types'
 import {Reference} from './Types'
@@ -192,6 +191,13 @@ export default class RMGlobal {
   // application for the given node
   static requireObjectForNode(node: RMNode): object {
     return node.proxy
+  }
+
+  // Returns an RMComputed wrapping the given function and options.
+  // If this RMComputed is later set as a property value, then it will
+  // effectively be treated as adding a computed property.
+  static computed<T,R>(f: (obj:T)=>R, options: ComputedPropertyOptions | null = null): RMComputed<T,R> {
+    return new RMComputed<T,R>(f, options)
   }
 }
 

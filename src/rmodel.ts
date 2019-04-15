@@ -87,6 +87,9 @@ const rmodelApi = {
   setImmutable: function (value:any, listener:ImmutableListener):object {
     return RMGlobal.setImmutable(value, listener)
   },
+  computed: function<T,R> (f:(obj:T)=>R, options:ComputedPropertyOptions | null = null):object {
+    return RMGlobal.computed(f, options)
+  },
 }
 
 // Combine the main function with the API

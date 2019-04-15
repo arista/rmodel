@@ -126,6 +126,13 @@ class RMChangeListener {
     }
 }
 
+class RMComputed {
+    constructor(f, options) {
+        this.f = f;
+        this.options = options;
+    }
+}
+
 // The handler that intercepts calls to get, set, or delete properties
 // on an underlying object, passing those calls through to the RMNode
 // representing that object.
@@ -1015,9 +1022,6 @@ class RMNode {
         this.disconnected = false;
         this._root = this;
         this.proxyHandler = new RMProxy(this);
-        // We need to do this to satisfy Flow, which complains about the
-        // proxyHandler's defining get, set, etc. when it's supposed to be
-        // read-only
         const handler = this.proxyHandler;
         this.proxy = new Proxy(target, handler);
         this.primaryReference = null;
@@ -1282,6 +1286,13 @@ class RMNode {
     }
     // Called from the proxy to set a property value
     proxySet(property, value) {
+        // If the value is an RMComputed, then this is a shortcut for
+        // addComputedProperty
+        if (value instanceof RMComputed && typeof (property) === 'string') {
+            const c = value;
+            this.addComputedProperty(property, c.f, c.options);
+            return true;
+        }
         // If the target is no longer being managed by this RMNode, then
         // try to find the node that is now managing the object and pass
         // the call to it.  Otherwise just pass the call through to the
@@ -1645,10 +1656,17 @@ class RMNode {
     processChildren(added = null) {
         const target = this.target;
         const root = this.root;
+        // Flag indicating if any "shortcuts" were encountered, such as
+        // RMComputed or RMFindById
+        let hadShortcuts = false;
         // Go through the object children
         for (const property in target) {
             const value = target[property];
-            if (value instanceof Object) {
+            // If it's a "shortcut", take note of that
+            if (value instanceof RMComputed) {
+                hadShortcuts = true;
+            }
+            else if (value instanceof Object) {
                 const childNode = RMNode.getNodeForObject(value);
                 // If the child doesn't have an RMNode, create one, set this
                 // as its primary reference, set its root, and proceed
@@ -1691,6 +1709,17 @@ class RMNode {
                     // FIXME - better exception, including the attempted path to
                     // the child and its existing path
                     throw new Error('Attempt to add child from another tree');
+                }
+            }
+        }
+        // If any values were "shortcuts", then walk through the list
+        // again
+        if (hadShortcuts) {
+            for (const property in target) {
+                const value = target[property];
+                if (value instanceof RMComputed) {
+                    const c = value;
+                    this.addComputedProperty(property, c.f, c.options);
                 }
             }
         }
@@ -1905,7 +1934,6 @@ class RMNode {
         if (insertCount != 0 || deleteCount != 0) {
             const listeners = this.getInterestedArrayChangeListeners();
             if (listeners != null) {
-                // We need to do this to satisfy flow
                 const eventTarget = this.proxy;
                 const event = {
                     type: 'ArrayChange',
@@ -3041,8 +3069,6 @@ class RMNode {
     // Creates a new object that can be used as a copy of the given
     // object
     prepareImmutableCopy(obj) {
-        // Without the "any", flow complains about treating Array as an
-        // object, and assigning RMNODE_KEY
         const ret = (Array.isArray(obj)) ? Array(obj.length) : {};
         // Set the immutable node to point back to this node, so that
         // calling RModel(...) on it will return the mutable proxy
@@ -3154,7 +3180,6 @@ class RMNode {
 // The key on an underlying object that refers back to its RMNode
 const RMNODE_KEY = Symbol('RMNODE_KEY');
 
-// @flow
 // Serves both as the main gateway of the rmodel API, and as a
 // singleton instance for holding global RModel state
 class RMGlobal {
@@ -3316,6 +3341,12 @@ class RMGlobal {
     static requireObjectForNode(node) {
         return node.proxy;
     }
+    // Returns an RMComputed wrapping the given function and options.
+    // If this RMComputed is later set as a property value, then it will
+    // effectively be treated as adding a computed property.
+    static computed(f, options = null) {
+        return new RMComputed(f, options);
+    }
 }
 
 // The main entry point into the RModel API.  An application will
@@ -3384,6 +3415,9 @@ const rmodelApi = {
     },
     setImmutable: function (value, listener) {
         return RMGlobal.setImmutable(value, listener);
+    },
+    computed: function (f, options = null) {
+        return RMGlobal.computed(f, options);
     },
 };
 // Combine the main function with the API
