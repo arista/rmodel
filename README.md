@@ -279,5 +279,31 @@ Now currentUserDisplay is kept in sync with the models stored elsewhere in the t
 
 Note that RModel stores the id internally - it is not exposed as a visible property.  An RModel object may have an "id" property and also be assigned an RModel id with a different value.
 
+## Shortcuts for id's and computed properties
+
+The above examples used methods like `RModel.setId`, `RModel.addComputedProperty`, and `RModel.findById`.  Because these methods are used so often, there are shortcuts that allow them to be used directly in object initializers.  The above example can be rewritten like this:
+
+> r = RModel({
+      models: {
+          [RModel.id]: "models",
+          users: {
+              "24": {name: "Quentin"},
+              "47": {name: "Fatima"},
+            }
+        },
+      currentUserDisplay: {
+          userId: "24",
+          models: RModel.idref("models"),
+          user: RModel.computed(v=>v.models && v.models.users && v.models.users[v.userId]),
+          name: RModel.computed(v=>v.user && v.user.name),
+        }
+    })
+
+> r.currentUserDisplay.name
+"Quentin"
+> r.currentUserDisplay.userId = "47"
+> r.currentUserDisplay.name
+"Fatima"
+
 ## Providing Immutable Values
 
