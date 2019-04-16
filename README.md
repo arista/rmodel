@@ -4,7 +4,9 @@ RModel is a state management library that enables Plain Old JavasScript Objects 
 
 The easiest way to become familiar with RModel is to play with it in either a node or browser console.
 
-RModel = require("./build/rmodel")
+```
+RModel = require("./dist/rmodel")
+```
 
 ## Enabling an Object With RModel
 
@@ -309,3 +311,45 @@ The above examples used methods like `RModel.setId`, `RModel.addComputedProperty
 
 ## Providing Immutable Values
 
+While RModel data is mutable, an RModel object has the ability to project immutable representations of its state.  These immutable values can then be fed into a system that depends on immutability, such as React, effectively allowing those systems to be driven by mutable data structures.
+
+In RModel this is activated by the "followImmutable" method.  Calling this method generates and returns a deep clone of the specified object and its descendants.  The method is also passed a listener function that will be called when the RModel object is modified - with each modification, a new version of the object is generated and passed to that listener function.
+
+In this example, we'll keep a history array of all the values that have been generated, to prove that the produced objects really are immutable:
+
+
+```
+> history = []
+[]
+> r = RModel({a: "red", b: [2, 3, 4], c: {d: "blue"}})
+{ a: 'red', b: [ 2, 3, 4 ], c: { d: 'blue' } }
+> history.push(RModel.followImmutable(r, e=>history.push(e.newValue)))
+1
+> history
+[ { a: 'red', b: [ 2, 3, 4 ], c: { d: 'blue' } } ]
+```
+
+Here we make the `followImmutable` call, passing it a listener function that will add each newly-generated value to the history array.  And since that call returns an initial clone of the RModel values, we'll push that into the history array as its first value.
+
+```
+> r.a = "green"
+'green'
+> history
+[ { a: 'red', b: [ 2, 3, 4 ], c: { d: 'blue' } },
+  { a: 'green', b: [ 2, 3, 4 ], c: { d: 'blue' } } ]
+```
+
+```
+> r.b.push(5)
+4
+> history
+[ { a: 'red', b: [ 2, 3, 4 ], c: { d: 'blue' } },
+  { a: 'green', b: [ 2, 3, 4 ], c: { d: 'blue' } },
+  { a: 'green', b: [ 2, 3, 4, 5 ], c: { d: 'blue' } } ]
+> history[0] === history[1]
+false
+> history[0].b === history[1].b
+true
+> history[1].b === history[2].b
+false
+```
