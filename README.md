@@ -315,7 +315,7 @@ While RModel data is mutable, an RModel object has the ability to project immuta
 
 In RModel this is activated by the "followImmutable" method.  Calling this method generates and returns a deep clone of the specified object and its descendants.  The method is also passed a listener function that will be called when the RModel object is modified - with each modification, a new version of the object is generated and passed to that listener function.
 
-In this example, we'll keep a history array of all the values that have been generated, to prove that the produced objects really are immutable:
+In this example, we'll keep a history array of all the values that have been generated, to prove that each mutation of the RModel value really does result in a new object.
 
 
 ```
@@ -329,14 +329,25 @@ In this example, we'll keep a history array of all the values that have been gen
 [ { a: 'red', b: [ 2, 3, 4 ], c: { d: 'blue' } } ]
 ```
 
-Here we make the `followImmutable` call, passing it a listener function that will add each newly-generated value to the history array.  And since that call returns an initial clone of the RModel values, we'll push that into the history array as its first value.
+Here we make the `followImmutable` call, passing it a listener function that will add each newly-generated value to the history array.  And since that call returns an initial clone of the RModel values, we've pushed that into the history array as its first value.  This value is *not* the RModel value - it is a clone that is intended to be treated as a read-only value, without any RModel-enabled functionality.
+
+Now we'll make a change:
 
 ```
 > r.a = "green"
 'green'
+> r
+{ a: 'green', b: [ 2, 3, 4 ], c: { d: 'blue' } }
+```
+So far this behaves as we've seen before - the value is changed to 'green' in the RModel object as we'd expect.  But because we've called `followImmutable`, this change caused a new object clone to be created and passed to the listener function, which in our case just adds the value to the `history` array.  So let's see what that looks like:
+```
 > history
 [ { a: 'red', b: [ 2, 3, 4 ], c: { d: 'blue' } },
   { a: 'green', b: [ 2, 3, 4 ], c: { d: 'blue' } } ]
+> history[0] === history[1]
+false
+> history[0].b === history[1].b
+true
 ```
 
 ```
