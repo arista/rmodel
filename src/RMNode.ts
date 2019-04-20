@@ -53,10 +53,10 @@ import {PropertyNameChangeEvent} from './InternalTypes'
 import {IdChangeEvent} from './InternalTypes'
 import {FindByIdChangeEvent} from './InternalTypes'
 
-export default class RMNode {
+export default class RMNode<T extends Object> {
   // The underlying object (Object or Array) represented by this
   // RMNode
-  target: object
+  target: T
 
   // Flag indicating that the target has been removed from its tree
   // and no longer has an associated RMNode.  In this state, the
@@ -65,7 +65,7 @@ export default class RMNode {
   disconnected: boolean
 
   // The root of the tree to which this RMNode belongs
-  _root: RMNode
+  _root: RMNode<any>
 
   // The handler object used by the Proxy
   proxyHandler: RMProxy
@@ -116,7 +116,7 @@ export default class RMNode {
   id: string | null
 
   // The mapping from id to object - this is only stored on the root
-  nodesById: {[key:string]: RMNode} | null
+  nodesById: {[key:string]: RMNode<any>} | null
 
   // The listeners waiting to be notified of a change to the object's
   // root
@@ -143,19 +143,19 @@ export default class RMNode {
   // The immutable copy of the node's value (only used if
   // followImmutable has been called on this node or one of its
   // ancestors)
-  immutableValue: object | null
+  immutableValue: T | null
 
   // If this node has an immutableValue, and the node's value has
   // changed, this holds a shallow copy of that immutableValue in
   // which the changes are being reflected.  When
   // flushImmutableChanges() is called, this value is moved over to
   // immutableValue
-  newImmutableValue: object | null
+  newImmutableValue: T | null
 
   // The RMImmutableTracker in place for this node and its descendants
   _immutableTracker: RMImmutableTracker | null
 
-  constructor(target: object) {
+  constructor(target: T) {
     this.target = target
     this.disconnected = false
     this._root = this
@@ -192,20 +192,20 @@ export default class RMNode {
   }
 
   // Returns the root of the tree containing this node
-  get root(): RMNode {
+  get root(): RMNode<any> {
     RMDependencyTrackers.addRootDependency(this)
     return this._root
   }
   
   // Returns true if this and the given node are in the same tree -
   // i.e., they have the same roots
-  isSameTree(node: RMNode | null): boolean {
+  isSameTree(node: RMNode<any> | null): boolean {
     return node != null && this.root === node.root
   }
 
   // Shorthad for getting the referrer of the primary reference, null
   // if this is the root
-  get parent(): RMNode | null {
+  get parent(): RMNode<any> | null {
     RMDependencyTrackers.addParentDependency(this)
     return this.primaryReference != null ? this.primaryReference.referrer : null
   }
@@ -219,7 +219,7 @@ export default class RMNode {
 
   // Returns all of the children of this node - that is, other nodes
   // referenced by this as primary references
-  get children(): Array<RMNode> {
+  get children(): Array<RMNode<any>> {
     // FIXME - test this
     const ret = []
     for (const property in this.target) {
@@ -236,9 +236,9 @@ export default class RMNode {
 
   // Returns all of the descendants of this node, including only nodes
   // referenced with a primary reference
-  get descendants(): Array<RMNode> {
+  get descendants(): Array<RMNode<any>> {
     // FIXME - test this
-    const ret: Array<RMNode> = []
+    const ret: Array<RMNode<any>> = []
     this.addDescendantsToArray(ret)
     return ret
   }
@@ -246,14 +246,14 @@ export default class RMNode {
   // Returns an array including this and all of the descendants of
   // this node, including only nodes referenced with a primary
   // reference
-  get thisAndDescendants(): Array<RMNode> {
+  get thisAndDescendants(): Array<RMNode<any>> {
     // FIXME - test this
     const ret = [this]
     this.addDescendantsToArray(ret)
     return ret
   }
 
-  addDescendantsToArray(arr: Array<RMNode>) {
+  addDescendantsToArray(arr: Array<RMNode<any>>) {
     for (const property in this.target) {
       const val = (this.target as any)[property]
       const node = RMNode.getNodeForValue(val)
@@ -267,7 +267,7 @@ export default class RMNode {
   }
 
   // Returns true if this node is a descendant of ancestor
-  isDescendantOf(ancestor: RMNode): boolean {
+  isDescendantOf(ancestor: RMNode<any>): boolean {
     let n = this.parent
     while (n != null) {
       if (n === ancestor) {
@@ -280,12 +280,12 @@ export default class RMNode {
 
   // Returns true if this node is the same as ancestor or is a
   // descendant of ancestor
-  isSameOrDescendantOf(ancestor: RMNode): boolean {
+  isSameOrDescendantOf(ancestor: RMNode<any>): boolean {
     return this === ancestor || this.isDescendantOf(ancestor)
   }
 
   // Returns true if the given referrer/property is the primary reference to this node
-  isPrimaryReference(referrer: RMNode, property: string): boolean {
+  isPrimaryReference(referrer: RMNode<any>, property: string): boolean {
     const ref = this.primaryReference
     return ref != null && ref.matches(referrer, property)
   }  
@@ -293,7 +293,7 @@ export default class RMNode {
   // Sets the given referrer and property to be the primary reference
   // to this node.  This will also set the root of this node to the
   // referrer's root
-  setPrimaryReference(referrer: RMNode, property: string, added: Array<RMNode> | null) {
+  setPrimaryReference(referrer: RMNode<any>, property: string, added: Array<RMNode<any>> | null) {
     if (!this.isPrimaryReference(referrer, property)) {
       this.assignPrimaryReference(new RMReference(referrer, property))
       this.setRoot(referrer.root, added)
@@ -318,7 +318,7 @@ export default class RMNode {
   // Sets the root of this node.  If the root is actually changing,
   // then that means the node is being added to the tree, so it is
   // added to the given added array
-  setRoot(newRoot: RMNode, added: Array<RMNode> | null) {
+  setRoot(newRoot: RMNode<any>, added: Array<RMNode<any>> | null) {
     if (this.root !== newRoot) {
       const oldRoot = this.root
       this._root = newRoot
@@ -342,7 +342,7 @@ export default class RMNode {
 
   // Returns true if the node has a secondary reference with the given
   // referrer and property
-  hasSecondaryReference(referrer: RMNode, property: string): boolean {
+  hasSecondaryReference(referrer: RMNode<any>, property: string): boolean {
     if (this.secondaryReferences == null) {
       return false
     }
@@ -357,7 +357,7 @@ export default class RMNode {
   }
 
   // Adds a secondary reference
-  addSecondaryReference(referrer: RMNode, property: string) {
+  addSecondaryReference(referrer: RMNode<any>, property: string) {
     const ref = new RMReference(referrer, property)
     if (this.secondaryReferences == null) {
       this.secondaryReferences = [ref]
@@ -368,7 +368,7 @@ export default class RMNode {
   }
 
   // Removes a secondary reference
-  removeSecondaryReference(referrer: RMNode, property: string) {
+  removeSecondaryReference(referrer: RMNode<any>, property: string) {
     const refs = this.secondaryReferences
     if (refs != null) {
       for (let i = 0; i < refs.length; i++) {
@@ -383,7 +383,7 @@ export default class RMNode {
 
   // Removes the given reference, either as a primary or a secondary
   // reference
-  removeReference(referrer: RMNode, property: string) {
+  removeReference(referrer: RMNode<any>, property: string) {
     if (this.isPrimaryReference(referrer, property)) {
       this.assignPrimaryReference(null)
     }
@@ -621,13 +621,13 @@ export default class RMNode {
   // Associating RMNodes with objects
 
   // Returns the RMNode associated with an object, null if none
-  static getNode(target: object): RMNode | null {
+  static getNode<R extends Object>(target: R): RMNode<R> | null {
     return (target as any)[RMNODE_KEY]
   }
 
   // Creates a new RMNode for the given object and associates the
   // object with it
-  static createNode(target: object): RMNode {
+  static createNode<R extends Object>(target: R): RMNode<R> {
     const node = new RMNode(target)
     Object.defineProperty(target, RMNODE_KEY, {value: node, enumerable: false, writable: true, configurable: true})
     return node
@@ -645,7 +645,7 @@ export default class RMNode {
   // then the RModel associated with that object is found or created
   // (recursively doing the same for its descendants), and that
   // RModel's proxy is returned.
-  static valueToRModel(value: any): any {
+  static valueToRModel<R>(value: R): R {
     if (value instanceof Object) {
       return this.objectToRModel(value)
     }
@@ -657,12 +657,13 @@ export default class RMNode {
   // Returns the RModel version of an object.  The RModel associated
   // with the object is found or created (recursively doing the same
   // for its descendants), and that RModel's proxy is returned
-  static objectToRModel(obj: object): object {
+  static objectToRModel<R extends Object>(obj: R): R {
     let node = this.getConnectedOrDisconnectedNodeForObject(obj)
     if (node == null) {
       node = this.createNodeForObject(obj)
       node.processChildren()
-      return node.proxy
+      // Convince TypeScript to return the proxy as a type - FIXME is there a better way?
+      return (node.proxy as any)
     }
     // If obj is an old node or proxy for an object that has been
     // removed from a tree, it may have been added to a new tree and
@@ -671,7 +672,8 @@ export default class RMNode {
       return this.objectToRModel(node.target)
     }
     else {
-      return node.proxy
+      // Convince TypeScript to return the proxy as a type - FIXME is there a better way?
+      return (node.proxy as any)
     }
   }
 
@@ -680,7 +682,7 @@ export default class RMNode {
 
   // Returns the RMNode associated with the given value, or null if
   // none
-  static getNodeForValue(value: any): RMNode | null {
+  static getNodeForValue(value: any): RMNode<any> | null {
     // If it's already an RMNode, return it
     if (value instanceof Object) {
       return RMNode.getNodeForObject(value)
@@ -694,7 +696,7 @@ export default class RMNode {
   // none.  If the object has been removed from its tree, this will
   // also return null, unless the node has been added to a new tree,
   // in which case the new node is returned.
-  static getNodeForObject(obj: object): RMNode | null {
+  static getNodeForObject<R extends Object>(obj: R): RMNode<R> | null {
     const node = this.getConnectedOrDisconnectedNodeForObject(obj)
     if (node != null) {
       // If obj is an old node or proxy for an object that has been
@@ -715,7 +717,7 @@ export default class RMNode {
   // Returns the RMNode associated with the given object, or null if
   // none.  Returns the node even if it has been "disconnected"
   // because the object was removed from its tree
-  static getConnectedOrDisconnectedNodeForObject(obj: object): RMNode | null {
+  static getConnectedOrDisconnectedNodeForObject<R extends Object>(obj: R): RMNode<R> | null {
     // If it's already an RMNode, return it
     if (obj instanceof RMNode) {
       return obj
@@ -738,7 +740,7 @@ export default class RMNode {
 
   // Returns the RMNode associated with an object, creating it if not
   // found.
-  static getOrCreateNodeForObject(obj: object): RMNode {
+  static getOrCreateNodeForObject<R extends Object>(obj: R): RMNode<R> {
     const existingNode = RMNode.getNodeForObject(obj)
     if (existingNode != null) {
       return existingNode
@@ -750,7 +752,7 @@ export default class RMNode {
 
   // Convert an object that has no existing RMNode to be the root of a
   // new RModel tree
-  static createNodeForObject(target: object): RMNode {
+  static createNodeForObject<R extends Object>(target: R): RMNode<R> {
     // If the target is a node or proxy, then try again using the
     // underlying target (so we don't try to creates nodes on top of
     // nodes or proxies)
@@ -765,7 +767,7 @@ export default class RMNode {
 
   // Returns the value that should be exposed to the external
   // application
-  static toExternalValue(value: any): any {
+  static toExternalValue<R>(value: any): R {
     if (value instanceof Object) {
       const node = RMNode.getNodeForObject(value)
       if (node == null) {
@@ -774,7 +776,8 @@ export default class RMNode {
         // doesn't have an RMNode associated with it.  Regardless,
         // return the proxy version of the RMNode
         if (value instanceof RMNode) {
-          return value.proxy
+          // FIXME - better way to convince TypeScript?
+          return (value.proxy as any)
         }
         // It is possible for there to be Objects accessible from an
         // RModel tree that don't have RMNodes - for example,
@@ -786,7 +789,8 @@ export default class RMNode {
         }
       }
       else {
-        return node.proxy
+        // FIXME - better way to convince TypeScript?
+        return (node.proxy as any)
       }
     }
     else {
@@ -796,7 +800,7 @@ export default class RMNode {
 
   // Converts an array of nodes to their external forms.  Returns null
   // if the array is null or empty
-  static toExternalArray(arr: Array<RMNode> | null): Array<any> | null {
+  static toExternalArray(arr: Array<RMNode<any>> | null): Array<any> | null {
     if (arr == null || arr.length == 0) {
       return null
     }
@@ -809,7 +813,7 @@ export default class RMNode {
 
   // Returns the "internal value", that is, the value used within the
   // target objects
-  static toInternalValue(value: any): any {
+  static toInternalValue<R>(value: R): R {
     if (value instanceof Object) {
       const node = RMNode.getNodeForObject(value)
       if (node == null) {
@@ -885,7 +889,7 @@ export default class RMNode {
   //
   // If added is specified, then any nodes added to the tree as a
   // result of this call are added to the array
-  processChildren(added: Array<RMNode> | null = null) {
+  processChildren(added: Array<RMNode<any>> | null = null) {
     const target = this.target
     const root = this.root
 
@@ -984,7 +988,7 @@ export default class RMNode {
   // This is called when .push(...) is called on this node's proxy
   proxyArrayPush(func: any, args: Array<any>): any {
     // Tell TypeScript we trust that the target is an array
-    const targetArray:Array<any> = (this.target as Array<any>)
+    const targetArray:Array<any> = (this.target as any)
     const inserted = this.argsToInternalValues(args, 0)
 
     // Perform the operation
@@ -1012,7 +1016,7 @@ export default class RMNode {
   // This is called when .pop(...) is called on this node's proxy
   proxyArrayPop(func: any, args: Array<any>): any {
     // Tell TypeScript we trust that the target is an array
-    const targetArray:Array<any> = (this.target as Array<any>)
+    const targetArray:Array<any> = (this.target as any)
     // Perform the operation
     const oldLength = targetArray.length
     let deleted = null
@@ -1038,7 +1042,7 @@ export default class RMNode {
   // This is called when .shift(...) is called on this node's proxy
   proxyArrayShift(func: any, args: Array<any>): any {
     // Tell TypeScript we trust that the target is an array
-    const targetArray:Array<any> = (this.target as Array<any>)
+    const targetArray:Array<any> = (this.target as any)
     // Perform the operation
     const oldLength = targetArray.length
     let deleted = null
@@ -1064,7 +1068,7 @@ export default class RMNode {
   // This is called when .unshift(...) is called on this node's proxy
   proxyArrayUnshift(func: any, args: Array<any>): any {
     // Tell TypeScript we trust that the target is an array
-    const targetArray:Array<any> = (this.target as Array<any>)
+    const targetArray:Array<any> = (this.target as any)
     const inserted = this.argsToInternalValues(args, 0)
 
     // Perform the operation
@@ -1092,7 +1096,7 @@ export default class RMNode {
   // This is called when .splice(...) is called on this node's proxy
   proxyArraySplice(func: any, args: Array<any>): any {
     // Tell TypeScript we trust that the target is an array
-    const targetArray:Array<any> = (this.target as Array<any>)
+    const targetArray:Array<any> = (this.target as any)
     const oldLength = targetArray.length
 
     // Normalize arguments
@@ -1140,7 +1144,7 @@ export default class RMNode {
     // referencing each of them and forming the list of nodes that
     // were added to the tree
     let addedNodes = null
-    let externalInserted: Array<RMNode> | null = null
+    let externalInserted: Array<RMNode<any>> | null = null
     if (inserted != null) {
       externalInserted = []
       // A special case is if we are adding a descendant of an item,
@@ -1189,7 +1193,7 @@ export default class RMNode {
     // after the added nodes are referenced, since an added node might
     // be what keeps a removed node in the tree.
     let externalDeleted = null
-    let removedNodes: Array<RMNode> | null = null
+    let removedNodes: Array<RMNode<any>> | null = null
     if (deleted != null && deleted.length > 0) {
       externalDeleted = []
       for (let deletedIx = 0; deletedIx < deleted.length; deletedIx++) {
@@ -1295,7 +1299,7 @@ export default class RMNode {
   // array of inserted elements.  addedNodes is the list of nodes that
   // ended up being added, and inserted is the array of external
   // values of the inserted elements
-  addValueForSplice(value: any, start: number, index: number, addedNodes: Array<RMNode> | null, inserted: Array<any>): Array<RMNode> | null {
+  addValueForSplice(value: any, start: number, index: number, addedNodes: Array<RMNode<any>> | null, inserted: Array<any>): Array<RMNode<any>> | null {
     const ix = start + index
     const ret = this.referenceValue(value, ix.toString(), addedNodes)
     const externalValue = RMNode.toExternalValue(value)
@@ -1339,7 +1343,7 @@ export default class RMNode {
 
   // Adjusts the index of value's first matching reference, changing
   // it to the given newIndex
-  adjustReferrerIndexProperty(referrer: RMNode, oldIndex: number, newIndex: number) {
+  adjustReferrerIndexProperty(referrer: RMNode<any>, oldIndex: number, newIndex: number) {
     const oldIndexStr = oldIndex.toString()
     const newIndexStr = newIndex.toString()
     const primaryReference = this.primaryReference
@@ -1491,7 +1495,7 @@ export default class RMNode {
   // notified of a change to the given property on this node
   getInterestedPropertyChangeListeners(property: string): Array<RMChangeListener> | null {
     let ret = null
-    for(let n:RMNode|null = this; n != null; n = n.parent) {
+    for(let n:RMNode<any>|null = this; n != null; n = n.parent) {
       const listeners:Array<RMChangeListener>|null = n.changeListeners
       if (listeners != null) {
         for(const l of listeners) {
@@ -1513,7 +1517,7 @@ export default class RMNode {
   // notified of a change to this node's array value
   getInterestedArrayChangeListeners(): Array<RMChangeListener> | null {
     let ret = null
-    for(let n:RMNode|null = this; n != null; n = n.parent) {
+    for(let n:RMNode<any>|null = this; n != null; n = n.parent) {
       const listeners:Array<RMChangeListener> | null = n.changeListeners
       if (listeners != null) {
         for(const l of listeners) {
@@ -1581,7 +1585,7 @@ export default class RMNode {
   }
 
   // Notifies any listeners of a change to the root
-  notifyRootChangeListeners(oldRoot: RMNode, newRoot: RMNode) {
+  notifyRootChangeListeners(oldRoot: RMNode<any>, newRoot: RMNode<any>) {
     const listeners = this.rootChangeListeners
     if (listeners != null && listeners.length > 0) {
       const listenersCopy = listeners.slice()
@@ -1649,7 +1653,7 @@ export default class RMNode {
   }
 
   // Notifies any listeners of a change to the parent
-  notifyParentChangeListeners(oldParent: RMNode | null, newParent: RMNode | null) {
+  notifyParentChangeListeners(oldParent: RMNode<any> | null, newParent: RMNode<any> | null) {
     const listeners = this.parentChangeListeners
     if (listeners != null && listeners.length > 0) {
       const listenersCopy = listeners.slice()
@@ -1861,7 +1865,7 @@ export default class RMNode {
 
   // Notifies any listeners of a change to the object mapped to a
   // given id
-  notifyFindByIdChangeListeners(id: string, oldValue: RMNode | null, newValue: RMNode | null) {
+  notifyFindByIdChangeListeners(id: string, oldValue: RMNode<any> | null, newValue: RMNode<any> | null) {
     const listeners = this.findByIdChangeListeners ? this.findByIdChangeListeners[id] : null
     if (listeners != null && listeners.length > 0) {
       let listenersCopy = null
@@ -1893,7 +1897,7 @@ export default class RMNode {
   // Moves any findById change listeners from this node to the
   // specified newRoot.  If the newRoot contains new mappings from id
   // to object, then the appropriate listeners are called
-  transferFindByIdChangeListeners(newRoot: RMNode) {
+  transferFindByIdChangeListeners(newRoot: RMNode<any>) {
     // FIXME - test this
     const findByIdChangeListeners = this.findByIdChangeListeners
     if (findByIdChangeListeners != null) {
@@ -1939,7 +1943,7 @@ export default class RMNode {
   // handles recursively processing any children.  Returns an array of
   // the nodes that were added to the tree (using the passed-in added
   // array if one was supplied)
-  referenceValue(value: any, property: string, added: Array<RMNode> | null): Array<RMNode> | null {
+  referenceValue(value: any, property: string, added: Array<RMNode<any>> | null): Array<RMNode<any>> | null {
     if (value instanceof Object) {
       const newNode = RMNode.getOrCreateNodeForObject(value)
       // If we're referencing the root of this tree, just add it as
@@ -1978,7 +1982,7 @@ export default class RMNode {
   // either from being replaced by a property set, or from a property
   // delete.  If removed is specified, then any nodes removed from the
   // tree are placed in that array.
-  dereferenceValue(value: any, property: string, removed: Array<RMNode> | null) {
+  dereferenceValue(value: any, property: string, removed: Array<RMNode<any>> | null) {
     if (value instanceof Object) {
       const oldNode = RMNode.getNodeForObject(value)
       if (oldNode != null) {
@@ -1998,7 +2002,7 @@ export default class RMNode {
   // removed, as a result of a property set or delete.  If removed is
   // specified, then any nodes removed from the tree as a result are
   // added to that array.
-  removePrimaryReference(removed: Array<RMNode> | null) {
+  removePrimaryReference(removed: Array<RMNode<any>> | null) {
     // First check if there's a secondary reference from a referrer
     // that's not a descendant of this node
     const secondaryRef = this.findReplacementSecondaryReference()
@@ -2021,7 +2025,7 @@ export default class RMNode {
   //
   // If removed is specified then any nodes removed from the tree as a
   // result are added to that array.
-  dereferenced(removed: Array<RMNode> | null) {
+  dereferenced(removed: Array<RMNode<any>> | null) {
     // Get all of this node's descendants and clear their GC flags
     const nodes = this.thisAndDescendants
     for(const node of nodes) {
@@ -2202,13 +2206,13 @@ export default class RMNode {
   // A property can only have one associated computed property at a
   // time, so calling this will remove any existing computed property
   // with the same property name.
-  addComputedProperty<T,R>(property: string, f: (obj:T)=>R, options: ComputedPropertyOptions | null) {
+  addComputedProperty<R>(property: string, f: (obj:T)=>R, options: ComputedPropertyOptions | null) {
     // Replace any existing property
     this.removeComputedProperty(property)
 
     // Add the property
-    const targetObject = RMNode.toExternalValue(this)
-    const computedProperty = new RMComputedProperty(this, targetObject, property, f, options)
+    const targetObject = RMNode.toExternalValue<T>(this)
+    const computedProperty = new RMComputedProperty<T,R>(this, targetObject, property, f, options)
     if (this.computedProperties == null) {
       this.computedProperties = [computedProperty]
     }
@@ -2309,7 +2313,7 @@ export default class RMNode {
 
   // Consults the id-to-object mapping stored in the root and returns
   // the object with the given id, or null if not found
-  findNodeById(id: string): RMNode | null {
+  findNodeById(id: string): RMNode<any> | null {
     const nodesById = this.root.nodesById
     if (nodesById != null) {
       return nodesById[id]
@@ -2321,7 +2325,7 @@ export default class RMNode {
 
   // Takes any nodesById settings on the current node, and merges them
   // into the newRoot, removing them from the oldRoot
-  mergeNodesById(newRoot: RMNode) {
+  mergeNodesById(newRoot: RMNode<any>) {
     const nodesById = this.nodesById
     if (nodesById != null) {
       // Go through all the mappings, transferring them to the new
@@ -2341,7 +2345,7 @@ export default class RMNode {
   }
 
   // Handles the mechanics of updating the mapping from id to node
-  setNodeById(id: string, value: RMNode | null) {
+  setNodeById(id: string, value: RMNode<any> | null) {
     if (value == null) {
       if (this.nodesById != null && this.nodesById.hasOwnProperty(id)) {
         const oldValue = this.nodesById[id]
@@ -2398,7 +2402,7 @@ export default class RMNode {
   // value.
   //
   // This returns the initial immutable copy of the object
-  followImmutable(listener: ImmutableListener): object {
+  followImmutable(listener: ImmutableListener<T>): T {
     if (this.immutableTracker != null) {
       // FIXME test this
       throw new Error('followImmutable has already been called on this object or one of its ancestors')
@@ -2417,7 +2421,7 @@ export default class RMNode {
   // Returns the RMImmutableTracker in effect for this node
   get immutableTracker(): RMImmutableTracker | null {
     // FIXME - test this
-    for (let n:RMNode|null = this; n != null; n = n.parent) {
+    for (let n:RMNode<any>|null = this; n != null; n = n.parent) {
       const it = n._immutableTracker
       if (it != null) {
         return it
@@ -2456,7 +2460,7 @@ export default class RMNode {
 
   // Creates a new object that can be used as a copy of the given
   // object
-  prepareImmutableCopy(obj: object): object {
+  prepareImmutableCopy<R extends object>(obj: R): R {
     const ret: any = (Array.isArray(obj)) ? Array(obj.length) : {}
 
     // Set the immutable node to point back to this node, so that

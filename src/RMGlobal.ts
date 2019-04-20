@@ -151,7 +151,7 @@ export default class RMGlobal {
     const node = this.requireNodeForValue(value)
     return node.findById(id)
   }
-  static followImmutable(value: any, listener: ImmutableListener): object {
+  static followImmutable<T>(value: T, listener: ImmutableListener<T>): T {
     const node = this.requireNodeForValue(value)
     return node.followImmutable(listener)
   }
@@ -159,7 +159,7 @@ export default class RMGlobal {
   
   // Returns the RMNode associated with the given value, throws an
   // exception if none
-  static requireNodeForValue(value: any): RMNode {
+  static requireNodeForValue<T>(value: T): RMNode<T> {
     const node = RMNode.getNodeForValue(value)
     if (node == null) {
       throw new Error('InvalidArgument: Expected an RModel-enabled object value')
@@ -169,7 +169,7 @@ export default class RMGlobal {
 
   // Returns the RMNode associated with the given value, even if that
   // node has been disconnected, throws an exception if none
-  static requireConnectedOrDisconnectedNodeForValue(value: any): RMNode {
+  static requireConnectedOrDisconnectedNodeForValue<T>(value: T): RMNode<T> {
     let node = RMNode.getNodeForValue(value)
     if (node == null) {
       if (value instanceof Object) {
@@ -184,14 +184,16 @@ export default class RMGlobal {
 
   // Returns the external object that should be exposed to the
   // application for the given node
-  static getObjectForNode(node: RMNode | null): object | null {
-    return node != null ? node.proxy : null
+  static getObjectForNode<T>(node: RMNode<T> | null): T | null {
+    // convince TypeScript that the proxy is a T - FIXME is there a better way?
+    return node != null ? (node.proxy as any) : null
   }
 
   // Returns the external object that should be exposed to the
   // application for the given node
-  static requireObjectForNode(node: RMNode): object {
-    return node.proxy
+  static requireObjectForNode<T>(node: RMNode<T>): T {
+    // convince TypeScript that the proxy is a T
+    return (node.proxy as any)
   }
 
   // Returns an RMComputed wrapping the given function and options.

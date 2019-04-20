@@ -23,7 +23,7 @@ export default class RMComputedProperty<T,R> {
   // The <T,R> are placeholder types, where T is the type of the
   // underlying object, and R is the type of the computed property
   
-  target: RMNode
+  target: RMNode<T>
   property: string
   f: (obj:T)=>R
   options: ComputedPropertyOptions | null
@@ -41,7 +41,7 @@ export default class RMComputedProperty<T,R> {
   dependencyChangedCall: ()=>void
   computeAndAssignValueCall: ()=>void
 
-  constructor(target: RMNode, targetObject: T, property: string, f: (obj:T)=>R, options: ComputedPropertyOptions | null) {
+  constructor(target: RMNode<T>, targetObject: T, property: string, f: (obj:T)=>R, options: ComputedPropertyOptions | null) {
     this.target = target
     this.property = property
     this.f = f

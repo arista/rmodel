@@ -158,13 +158,13 @@ export interface ComputedPropertyOptions {
 
 // The listener at the root of an immutable tree notified when the
 // root's value has changed
-export type ImmutableListener = (event:ImmutableChangeEvent)=>void
+export type ImmutableListener<T> = (event:ImmutableChangeEvent<T>)=>void
 
 // The event reported at the root of an immutable tree, indicating
 // that a change has occurred somewhere in the tree, eventually
 // resulting in a new value for the immutable root of the tree
-export interface ImmutableChangeEvent {
+export interface ImmutableChangeEvent<T> {
   type: 'ImmutableChange'
-  oldValue: object
-  newValue: object
+  oldValue: T
+  newValue: T
 }

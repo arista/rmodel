@@ -86,7 +86,7 @@ const rmodelApi = {
   findById: function(value:any, id:string):object | null {
     return RMGlobal.findById(value, id)
   },
-  followImmutable: function (value:any, listener:ImmutableListener):object {
+  followImmutable: function<T> (value:T, listener:ImmutableListener<T>):T {
     return RMGlobal.followImmutable(value, listener)
   },
   computed: function<T,R> (f:(obj:T)=>R, options:ComputedPropertyOptions | null = null):object {
