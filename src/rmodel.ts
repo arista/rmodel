@@ -22,7 +22,7 @@ import {ImmutableListener} from './Types'
 import {RMNODE_ID} from './RMNode'
 
 // The main function used to enable a value for RModel use
-const rmodelFunc = function (value:any | null):any | null {
+const rmodelFunc = function<T> (value:T):T {
   return RMGlobal.toRModel(value)
 }
 
