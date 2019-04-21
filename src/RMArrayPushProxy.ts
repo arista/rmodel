@@ -4,8 +4,8 @@
 import RMNode from './RMNode'
 
 export default class RMArrayPushProxy {
-  node: RMNode
-  constructor(node: RMNode) {
+  node: RMNode<any>
+  constructor(node: RMNode<any>) {
     this.node = node
   }
 

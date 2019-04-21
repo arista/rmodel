@@ -6,14 +6,14 @@ import {IdDependency} from './Types'
 import {Dependency} from './Types'
 
 export default class RMIdDependency extends RMDependency {
-  target: RMNode
-  constructor(target: RMNode) {
+  target: RMNode<any>
+  constructor(target: RMNode<any>) {
     super()
     this.target = target
   }
 
   // Converts this to an application-visible Dependency
-  toDependency(toExternalValue: (node:RMNode)=>object): Dependency {
+  toDependency(toExternalValue: (node:RMNode<any>)=>object): Dependency {
     const ret:IdDependency = {
       type: 'IdDependency',
       target: toExternalValue(this.target)
@@ -22,7 +22,7 @@ export default class RMIdDependency extends RMDependency {
   }
 
   // Returns true if the given id dependency matches this
-  matchesIdDependency(node: RMNode): boolean {
+  matchesIdDependency(node: RMNode<any>): boolean {
     return this.target === node
   }
 

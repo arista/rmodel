@@ -22,7 +22,7 @@ export default class RMChangeListener {
   // Returns true if this listener (belonging to the given node) is
   // interested in change events from the given source node for the
   // given property
-  isInterestedInPropertyChange(node: RMNode, source: RMNode, property: string): boolean {
+  isInterestedInPropertyChange(node: RMNode<any>, source: RMNode<any>, property: string): boolean {
     // If a specific property is required and doesn't match, then no
     if (this.options != null &&
         this.options.property != null &&
@@ -34,7 +34,7 @@ export default class RMChangeListener {
 
   // Returns true if this listener (belonging to the given node) is
   // interested in array change events from the given source node
-  isInterestedInArrayChange(node: RMNode, source: RMNode): boolean {
+  isInterestedInArrayChange(node: RMNode<any>, source: RMNode<any>): boolean {
     // If a specific property is required then no
     if (this.options != null &&
         this.options.property != null) {
@@ -45,7 +45,7 @@ export default class RMChangeListener {
 
   // Returns true if this listener is not interested in any changes
   // from the given source
-  isNotInterestedInChangeFromSource(node: RMNode, source: RMNode): boolean {
+  isNotInterestedInChangeFromSource(node: RMNode<any>, source: RMNode<any>): boolean {
     // Check the source
     if (this.options == null || this.options.source == null) {
       // Default is 'self'

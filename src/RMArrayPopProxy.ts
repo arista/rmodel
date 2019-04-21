@@ -4,9 +4,9 @@
 import RMNode from './RMNode'
 
 export default class RMArrayPopProxy {
-  readonly node: RMNode
+  readonly node: RMNode<any>
 
-  constructor(node: RMNode) {
+  constructor(node: RMNode<any>) {
     this.node = node
   }
 

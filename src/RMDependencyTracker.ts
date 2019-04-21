@@ -17,7 +17,7 @@ export default class RMDependencyTracker {
 
   // Adds the given dependency to the list, if it doesn't already
   // exist
-  addPropertyDependency(node: RMNode, property: string) {
+  addPropertyDependency(node: RMNode<any>, property: string) {
     if (!this.hasPropertyDependency(node, property)) {
       if (this.dependencies == null) {
         this.dependencies = []
@@ -28,7 +28,7 @@ export default class RMDependencyTracker {
   }
 
   // Returns true if the given dependency is already in the list
-  hasPropertyDependency(node: RMNode, property: string): boolean {
+  hasPropertyDependency(node: RMNode<any>, property: string): boolean {
     if (this.dependencies != null) {
       for(const dep of this.dependencies) {
         if (dep.matchesPropertyDependency(node, property)) {
@@ -41,7 +41,7 @@ export default class RMDependencyTracker {
 
   // Adds the given dependency to the list, if it doesn't already
   // exist
-  addRootDependency(node: RMNode) {
+  addRootDependency(node: RMNode<any>) {
     if (!this.hasRootDependency(node)) {
       if (this.dependencies == null) {
         this.dependencies = []
@@ -52,7 +52,7 @@ export default class RMDependencyTracker {
   }
 
   // Returns true if the given dependency is already in the list
-  hasRootDependency(node: RMNode): boolean {
+  hasRootDependency(node: RMNode<any>): boolean {
     if (this.dependencies != null) {
       for(const dep of this.dependencies) {
         if (dep.matchesRootDependency(node)) {
@@ -65,7 +65,7 @@ export default class RMDependencyTracker {
 
   // Adds the given dependency to the list, if it doesn't already
   // exist
-  addParentDependency(node: RMNode) {
+  addParentDependency(node: RMNode<any>) {
     if (!this.hasParentDependency(node)) {
       if (this.dependencies == null) {
         this.dependencies = []
@@ -76,7 +76,7 @@ export default class RMDependencyTracker {
   }
 
   // Returns true if the given dependency is already in the list
-  hasParentDependency(node: RMNode): boolean {
+  hasParentDependency(node: RMNode<any>): boolean {
     if (this.dependencies != null) {
       for(const dep of this.dependencies) {
         if (dep.matchesParentDependency(node)) {
@@ -89,7 +89,7 @@ export default class RMDependencyTracker {
 
   // Adds the given dependency to the list, if it doesn't already
   // exist
-  addPropertyNameDependency(node: RMNode) {
+  addPropertyNameDependency(node: RMNode<any>) {
     if (!this.hasPropertyNameDependency(node)) {
       if (this.dependencies == null) {
         this.dependencies = []
@@ -100,7 +100,7 @@ export default class RMDependencyTracker {
   }
 
   // Returns true if the given dependency is already in the list
-  hasPropertyNameDependency(node: RMNode): boolean {
+  hasPropertyNameDependency(node: RMNode<any>): boolean {
     if (this.dependencies != null) {
       for(const dep of this.dependencies) {
         if (dep.matchesPropertyNameDependency(node)) {
@@ -113,7 +113,7 @@ export default class RMDependencyTracker {
 
   // Adds the given dependency to the list, if it doesn't already
   // exist
-  addIdDependency(node: RMNode) {
+  addIdDependency(node: RMNode<any>) {
     if (!this.hasIdDependency(node)) {
       if (this.dependencies == null) {
         this.dependencies = []
@@ -124,7 +124,7 @@ export default class RMDependencyTracker {
   }
 
   // Returns true if the given dependency is already in the list
-  hasIdDependency(node: RMNode): boolean {
+  hasIdDependency(node: RMNode<any>): boolean {
     if (this.dependencies != null) {
       for(const dep of this.dependencies) {
         if (dep.matchesIdDependency(node)) {
@@ -137,7 +137,7 @@ export default class RMDependencyTracker {
 
   // Adds the given dependency to the list, if it doesn't already
   // exist
-  addFindByIdDependency(node: RMNode, id: string) {
+  addFindByIdDependency(node: RMNode<any>, id: string) {
     if (!this.hasFindByIdDependency(node, id)) {
       if (this.dependencies == null) {
         this.dependencies = []
@@ -148,7 +148,7 @@ export default class RMDependencyTracker {
   }
 
   // Returns true if the given dependency is already in the list
-  hasFindByIdDependency(node: RMNode, id: string): boolean {
+  hasFindByIdDependency(node: RMNode<any>, id: string): boolean {
     if (this.dependencies != null) {
       for(const dep of this.dependencies) {
         if (dep.matchesFindByIdDependency(node, id)) {

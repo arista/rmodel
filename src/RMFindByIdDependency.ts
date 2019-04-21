@@ -7,16 +7,16 @@ import {FindByIdDependency} from './Types'
 import {Dependency} from './Types'
 
 export default class RMIdDependency extends RMDependency {
-  target: RMNode
+  target: RMNode<any>
   id: string
-  constructor(target: RMNode, id: string) {
+  constructor(target: RMNode<any>, id: string) {
     super()
     this.target = target
     this.id = id
   }
 
   // Converts this to an application-visible Dependency
-  toDependency(toExternalValue: (node:RMNode)=>object): Dependency {
+  toDependency(toExternalValue: (node:RMNode<any>)=>object): Dependency {
     const ret:FindByIdDependency = {
       type: 'FindByIdDependency',
       target: toExternalValue(this.target),
@@ -26,7 +26,7 @@ export default class RMIdDependency extends RMDependency {
   }
 
   // Returns true if the given findById dependency matches this
-  matchesFindByIdDependency(node: RMNode, id: string): boolean {
+  matchesFindByIdDependency(node: RMNode<any>, id: string): boolean {
     return this.target === node && this.id == id
   }
 

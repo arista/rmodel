@@ -153,7 +153,7 @@ export default class RMNode<T extends Object> {
   newImmutableValue: T | null
 
   // The RMImmutableTracker in place for this node and its descendants
-  _immutableTracker: RMImmutableTracker | null
+  _immutableTracker: RMImmutableTracker<T> | null
 
   constructor(target: T) {
     this.target = target
@@ -2419,7 +2419,7 @@ export default class RMNode<T extends Object> {
   }
 
   // Returns the RMImmutableTracker in effect for this node
-  get immutableTracker(): RMImmutableTracker | null {
+  get immutableTracker(): RMImmutableTracker<T> | null {
     // FIXME - test this
     for (let n:RMNode<any>|null = this; n != null; n = n.parent) {
       const it = n._immutableTracker

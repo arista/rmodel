@@ -49,7 +49,7 @@ export default class RMDependencyTrackers {
 
   // If there is a dependency tracker in effect, add a property
   // dependency to it
-  static addPropertyDependency(node: RMNode, property: string) {
+  static addPropertyDependency(node: RMNode<any>, property: string) {
     const dependencyTracker = this.current
     if (dependencyTracker != null) {
       dependencyTracker.addPropertyDependency(node, property)
@@ -58,7 +58,7 @@ export default class RMDependencyTrackers {
 
   // If there is a dependency tracker in effect, add a root dependency
   // to it
-  static addRootDependency(node: RMNode) {
+  static addRootDependency(node: RMNode<any>) {
     const dependencyTracker = this.current
     if (dependencyTracker != null) {
       dependencyTracker.addRootDependency(node)
@@ -67,7 +67,7 @@ export default class RMDependencyTrackers {
 
   // If there is a dependency tracker in effect, add a parent dependency
   // to it
-  static addParentDependency(node: RMNode) {
+  static addParentDependency(node: RMNode<any>) {
     const dependencyTracker = this.current
     if (dependencyTracker != null) {
       dependencyTracker.addParentDependency(node)
@@ -76,7 +76,7 @@ export default class RMDependencyTrackers {
 
   // If there is a dependency tracker in effect, add a propertyName
   // dependency to it
-  static addPropertyNameDependency(node: RMNode) {
+  static addPropertyNameDependency(node: RMNode<any>) {
     const dependencyTracker = this.current
     if (dependencyTracker != null) {
       dependencyTracker.addPropertyNameDependency(node)
@@ -85,7 +85,7 @@ export default class RMDependencyTrackers {
 
   // If there is a dependency tracker in effect, add an id dependency
   // to it
-  static addIdDependency(node: RMNode) {
+  static addIdDependency(node: RMNode<any>) {
     const dependencyTracker = this.current
     if (dependencyTracker != null) {
       dependencyTracker.addIdDependency(node)
@@ -94,7 +94,7 @@ export default class RMDependencyTrackers {
 
   // If there is a dependency tracker in effect, add a findById
   // dependency to it
-  static addFindByIdDependency(node: RMNode, id: string) {
+  static addFindByIdDependency(node: RMNode<any>, id: string) {
     const dependencyTracker = this.current
     if (dependencyTracker != null) {
       dependencyTracker.addFindByIdDependency(node, id)

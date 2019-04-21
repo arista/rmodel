@@ -8,9 +8,9 @@
 import RMNode from './RMNode'
 
 export default class RMProxy {
-  node: RMNode
+  node: RMNode<any>
 
-  constructor(node: RMNode) {
+  constructor(node: RMNode<any>) {
     this.node = node
   }
 
@@ -55,7 +55,7 @@ export default class RMProxy {
   // Returns the RMNode associated with the proxy representation of an
   // RModel-managed value, or null if the value is not managed by
   // RModel
-  static getNode(obj: object): RMNode | null {
+  static getNode(obj: object): RMNode<any> | null {
     return (obj as any)[RMPROXY_NODEKEY]
   }
 }

@@ -9,15 +9,15 @@ import {ImmutableListener} from './Types'
 import {ImmutableChangeEvent} from './Types'
 import RMNode from './RMNode'
 
-export default class RMImmutableTracker {
-  node: RMNode
-  listener: ImmutableListener
-  changedNodes: Array<RMNode> | null
+export default class RMImmutableTracker<T> {
+  node: RMNode<T>
+  listener: ImmutableListener<T>
+  changedNodes: Array<RMNode<any>> | null
 
   // Functions bound to this instance
   flushCall: ()=>void
 
-  constructor(node: RMNode, listener: ImmutableListener) {
+  constructor(node: RMNode<T>, listener: ImmutableListener<T>) {
     this.node = node
     this.listener = listener
     this.changedNodes = null
@@ -29,7 +29,7 @@ export default class RMImmutableTracker {
   // Notifies that the given node has created and modified a copy of
   // its immutable value, and will have to be notified at the end of
   // the current 'tick'
-  addChangedNode(node: RMNode) {
+  addChangedNode(node: RMNode<any>) {
     if(this.changedNodes == null) {
       this.changedNodes = [node]
     }
@@ -66,7 +66,7 @@ export default class RMImmutableTracker {
       }
 
       // Fire the event
-      const event: ImmutableChangeEvent = {
+      const event: ImmutableChangeEvent<T> = {
         type: 'ImmutableChange',
         oldValue,
         newValue

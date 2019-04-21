@@ -6,14 +6,14 @@ import {ParentDependency} from './Types'
 import {Dependency} from './Types'
 
 export default class RMParentDependency extends RMDependency {
-  target: RMNode
-  constructor(target: RMNode) {
+  target: RMNode<any>
+  constructor(target: RMNode<any>) {
     super()
     this.target = target
   }
 
   // Converts this to an application-visible Dependency
-  toDependency(toExternalValue: (node:RMNode)=>object): Dependency {
+  toDependency(toExternalValue: (node:RMNode<any>)=>object): Dependency {
     const ret:ParentDependency = {
       type: 'ParentDependency',
       target: toExternalValue(this.target)
@@ -22,7 +22,7 @@ export default class RMParentDependency extends RMDependency {
   }
 
   // Returns true if the given parent dependency matches this
-  matchesParentDependency(node: RMNode): boolean {
+  matchesParentDependency(node: RMNode<any>): boolean {
     return this.target === node
   }
 

@@ -4,10 +4,10 @@
 import RMNode from './RMNode'
 
 export default class RMReference {
-  referrer: RMNode
+  referrer: RMNode<any>
   property: string
 
-  constructor(referrer: RMNode, property: string) {
+  constructor(referrer: RMNode<any>, property: string) {
     this.referrer = referrer
     this.property = property
   }
@@ -19,7 +19,7 @@ export default class RMReference {
 
   // Returns true if the given ref has the same values as this
   // reference
-  matches(referrer: RMNode, property: string) {
+  matches(referrer: RMNode<any>, property: string) {
     return this.referrer == referrer && this.property == property
   }
 
