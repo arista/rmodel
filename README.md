@@ -4,7 +4,9 @@ RModel is a state management library that enables Plain Old JavasScript Objects 
 
 The easiest way to become familiar with RModel is to play with it in either a node or browser console.
 
-RModel = require("./build/rmodel")
+```
+RModel = require("./dist/rmodel")
+```
 
 ## Enabling an Object With RModel
 
@@ -309,3 +311,56 @@ The above examples used methods like `RModel.setId`, `RModel.addComputedProperty
 
 ## Providing Immutable Values
 
+While RModel data is mutable, an RModel object has the ability to project immutable representations of its state.  These immutable values can then be fed into a system that depends on immutability, such as React, effectively allowing those systems to be driven by mutable data structures.
+
+In RModel this is activated by the "followImmutable" method.  Calling this method generates and returns a deep clone of the specified object and its descendants.  The method is also passed a listener function that will be called when the RModel object is modified - with each modification, a new version of the object is generated and passed to that listener function.
+
+In this example, we'll keep a history array of all the values that have been generated, to prove that each mutation of the RModel value really does result in a new object.
+
+
+```
+> history = []
+[]
+> r = RModel({a: "red", b: [2, 3, 4], c: {d: "blue"}})
+{ a: 'red', b: [ 2, 3, 4 ], c: { d: 'blue' } }
+> history.push(RModel.followImmutable(r, e=>history.push(e.newValue)))
+1
+> history
+[ { a: 'red', b: [ 2, 3, 4 ], c: { d: 'blue' } } ]
+```
+
+Here we make the `followImmutable` call, passing it a listener function that will add each newly-generated value to the history array.  And since that call returns an initial clone of the RModel values, we've pushed that into the history array as its first value.  This value is *not* the RModel value - it is a clone that is intended to be treated as a read-only value, without any RModel-enabled functionality.
+
+Now we'll make a change:
+
+```
+> r.a = "green"
+'green'
+> r
+{ a: 'green', b: [ 2, 3, 4 ], c: { d: 'blue' } }
+```
+So far this behaves as we've seen before - the value is changed to 'green' in the RModel object as we'd expect.  But because we've called `followImmutable`, this change caused a new object clone to be created and passed to the listener function, which in our case just adds the value to the `history` array.  So let's see what that looks like:
+```
+> history
+[ { a: 'red', b: [ 2, 3, 4 ], c: { d: 'blue' } },
+  { a: 'green', b: [ 2, 3, 4 ], c: { d: 'blue' } } ]
+> history[0] === history[1]
+false
+> history[0].b === history[1].b
+true
+```
+
+```
+> r.b.push(5)
+4
+> history
+[ { a: 'red', b: [ 2, 3, 4 ], c: { d: 'blue' } },
+  { a: 'green', b: [ 2, 3, 4 ], c: { d: 'blue' } },
+  { a: 'green', b: [ 2, 3, 4, 5 ], c: { d: 'blue' } } ]
+> history[0] === history[1]
+false
+> history[0].b === history[1].b
+true
+> history[1].b === history[2].b
+false
+```
