@@ -199,8 +199,10 @@ export default class RMGlobal {
   // Returns an RMComputed wrapping the given function and options.
   // If this RMComputed is later set as a property value, then it will
   // effectively be treated as adding a computed property.
-  static computed<T,R>(f: (obj:T)=>R, options: ComputedPropertyOptions | null = null): RMComputed<T,R> {
-    return new RMComputed<T,R>(f, options)
+  static computed<T,R>(f: (obj:T)=>R, options: ComputedPropertyOptions | null = null): R {
+    // Although this is actually returning an RMComputed, from the
+    // point of view of the application it acts like it's returning R
+    return (new RMComputed<T,R>(f, options) as any)
   }
 
   // Returns an RMIdref wrapping the given id.  If this RMIdref is
