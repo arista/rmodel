@@ -225,6 +225,14 @@ export default class RMGlobal {
     // of view of the application it acts like it's returning R
     return (new RMIdref(id) as any)
   }
+
+  // FIXME - description
+  static raw<T>(value: T): T {
+    if (value instanceof Object) {
+      RMNode.markAsRaw((value as any))
+    }
+    return value
+  }
 }
 
 const SINGLETON = new RMGlobal()

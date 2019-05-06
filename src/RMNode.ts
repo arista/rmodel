@@ -553,7 +553,7 @@ export default class RMNode<T extends Object> {
       const added = this.referenceValue(newInternalValue, property, null)
 
       // Handle the old value
-      if (oldInternalValue instanceof Object) {
+      if (RMNode.isNodeableValue(oldInternalValue)) {
         removed = []
       }
       this.dereferenceValue(oldInternalValue, property, removed)
@@ -618,7 +618,7 @@ export default class RMNode<T extends Object> {
 
     if (hadOwnProperty) {
       let removed = null
-      if (oldInternalValue instanceof Object) {
+      if (RMNode.isNodeableValue(oldInternalValue)) {
         removed = []
       }
 
@@ -682,7 +682,7 @@ export default class RMNode<T extends Object> {
   // (recursively doing the same for its descendants), and that
   // RModel's proxy is returned.
   static valueToRModel<R>(value: R): R {
-    if (value instanceof Object) {
+    if (RMNode.isNodeableValue(value)) {
       return this.objectToRModel(value)
     }
     else {
@@ -720,12 +720,28 @@ export default class RMNode<T extends Object> {
   // none
   static getNodeForValue(value: any): RMNode<any> | null {
     // If it's already an RMNode, return it
-    if (value instanceof Object) {
+    if (RMNode.isNodeableValue(value)) {
       return RMNode.getNodeForObject(value)
     }
     else {
       return null
     }
+  }
+
+  // Returns true if the value is one that could have a RMNode
+  // associated with it - true for objects that are not marked
+  // as "raw" values
+  static isNodeableValue(value: any): boolean {
+    return (value instanceof Object) && !(value as any)[RMODEL_RAW]
+  }
+
+  // Marks the given value as a "raw" value, meaning that it will
+  // not be RModel-enabled
+  static markAsRaw(value:object) {
+    if ((value as any)[RMNODE_KEY] || RMProxy.getNode(value)) {
+      throw new Error(`Cannot mark value as raw if it is already RModel-enabled`)
+    }
+    (value as any)[RMODEL_RAW] = true
   }
   
   // Returns the RMNode associated with the given object, or null if
@@ -804,7 +820,7 @@ export default class RMNode<T extends Object> {
   // Returns the value that should be exposed to the external
   // application
   static toExternalValue<R>(value: any): R {
-    if (value instanceof Object) {
+    if (RMNode.isNodeableValue(value)) {
       const node = RMNode.getNodeForObject(value)
       if (node == null) {
         // If we get to this point for an RMNode, it probably means
@@ -850,7 +866,7 @@ export default class RMNode<T extends Object> {
   // Returns the "internal value", that is, the value used within the
   // target objects
   static toInternalValue<R>(value: R): R {
-    if (value instanceof Object) {
+    if (RMNode.isNodeableValue(value)) {
       const node = RMNode.getNodeForObject(value)
       if (node == null) {
         return value
@@ -866,7 +882,7 @@ export default class RMNode<T extends Object> {
 
   // Returns true if the given value is associated with an RModel
   static hasRModel(value: any): boolean {
-    if (value instanceof Object) {
+    if (RMNode.isNodeableValue(value)) {
       const node = RMNode.getConnectedOrDisconnectedNodeForObject(value)
       if (node == null) {
         return false
@@ -889,7 +905,7 @@ export default class RMNode<T extends Object> {
   // Returns the value being managed by this RMNode - i.e., the value
   // to which proxied get and set calls are being sent
   static getManagedValue(value: any): any {
-    if (value instanceof Object) {
+    if (RMNode.isNodeableValue(value)) {
       const node = this.getConnectedOrDisconnectedNodeForObject(value)
       if (node == null) {
         return value
@@ -942,7 +958,7 @@ export default class RMNode<T extends Object> {
         hadShortcuts = true
       }
 
-      else if (value instanceof Object) {
+      else if (RMNode.isNodeableValue(value)) {
         const childNode = RMNode.getNodeForObject(value)
 
         // If the child doesn't have an RMNode, create one, set this
@@ -1237,7 +1253,7 @@ export default class RMNode<T extends Object> {
         const deleteIx = start + deletedIx
         const externalDeletedElem = RMNode.toExternalValue(internalDeletedElem)
         externalDeleted.push(externalDeletedElem)
-        if (internalDeletedElem instanceof Object) {
+        if (RMNode.isNodeableValue(internalDeletedElem)) {
           if (removedNodes == null) {
             removedNodes = []
           }
@@ -1980,7 +1996,7 @@ export default class RMNode<T extends Object> {
   // the nodes that were added to the tree (using the passed-in added
   // array if one was supplied)
   referenceValue(value: any, property: string, added: Array<RMNode<any>> | null): Array<RMNode<any>> | null {
-    if (value instanceof Object) {
+    if (RMNode.isNodeableValue(value)) {
       const newNode = RMNode.getOrCreateNodeForObject(value)
       // If we're referencing the root of this tree, just add it as
       // a secondary reference
@@ -2019,7 +2035,7 @@ export default class RMNode<T extends Object> {
   // delete.  If removed is specified, then any nodes removed from the
   // tree are placed in that array.
   dereferenceValue(value: any, property: string, removed: Array<RMNode<any>> | null) {
-    if (value instanceof Object) {
+    if (RMNode.isNodeableValue(value)) {
       const oldNode = RMNode.getNodeForObject(value)
       if (oldNode != null) {
         // If this was the primary reference for the node...
@@ -2623,3 +2639,7 @@ const RMNODE_KEY = Symbol('RMNODE_KEY')
 
 // The key that, when set on a RModel value, sets the RModel's id
 export const RMNODE_ID = Symbol('RMNODE_ID')
+
+// The key that, when set on a value, causes it to be treated as a
+// "raw" value that will not be RModel-enabled
+export const RMODEL_RAW = Symbol('RMODEL_RAW')

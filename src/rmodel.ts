@@ -101,6 +101,9 @@ const rmodelApi = {
   idref: function<R>(id: string):R {
     return RMGlobal.idref(id)
   },
+  raw: function<T>(value: T):T {
+    return RMGlobal.raw(value)
+  },
 }
 
 // Combine the main function with the API
