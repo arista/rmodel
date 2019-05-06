@@ -52,6 +52,7 @@ import {ParentChangeEvent} from './InternalTypes'
 import {PropertyNameChangeEvent} from './InternalTypes'
 import {IdChangeEvent} from './InternalTypes'
 import {FindByIdChangeEvent} from './InternalTypes'
+import StringUtils from './StringUtils'
 
 export default class RMNode<T extends Object> {
   // The underlying object (Object or Array) represented by this
@@ -250,6 +251,41 @@ export default class RMNode<T extends Object> {
     // FIXME - test this
     const ret = [this]
     this.addDescendantsToArray(ret)
+    return ret
+  }
+
+  // Returns an array of the "path" of property names that lead from
+  // the root to this node through primary references
+  get path(): Array<string> {
+    const ref = this.primaryReference
+    if (ref == null) {
+      return []
+    }
+    else {
+      const p = ref.referrer.path
+      p.push(ref.property)
+      return p
+    }
+  }
+
+  get pathStr():string {
+    return this.getPathStr(null)
+  }
+
+  getPathStr(rootName:string|null):string {
+    let ret = (rootName == null) ? "<root>" : rootName
+    const path = this.path
+    for(const e of path) {
+      if (StringUtils.isNumberString(e)) {
+        ret = `${ret}[${e}]`
+      }
+      else if (StringUtils.isJSIdentifier(e)) {
+        ret = `${ret}.${e}`
+      }
+      else {
+        ret = `${ret}["${StringUtils.escapeToJSString(e)}"]`
+      }
+    }
     return ret
   }
 

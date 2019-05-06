@@ -75,6 +75,17 @@ export default class RMGlobal {
   }
 
   // FIXME - description
+  static getPath(value: any): Array<string> {
+    const node = this.requireNodeForValue(value)
+    return node.path
+  }
+  
+  static getPathStr(value: any, rootName:string|null = null): string {
+    const node = this.requireNodeForValue(value)
+    return node.getPathStr(rootName)
+  }
+  
+  // FIXME - description
   static hasRModel(value: any): boolean {
     return RMNode.hasRModel(value)
   }

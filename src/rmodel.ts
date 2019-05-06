@@ -47,6 +47,12 @@ const rmodelApi = {
   secondaryReferences: function (value:any):Array<Reference> {
     return RMGlobal.getSecondaryReferences(value)
   },
+  path: function(value:any):Array<string> {
+    return RMGlobal.getPath(value)
+  },
+  pathStr: function(value:any, rootName:string|null = null):string {
+    return RMGlobal.getPathStr(value, rootName)
+  },
   hasRModel: function (value:any):boolean {
     return RMGlobal.hasRModel(value)
   },
