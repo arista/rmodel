@@ -203,6 +203,9 @@ export default class RMGlobal {
   }
 
   static sorted<T,K>(value: Array<T>, sortKeyFunc:(v:T)=>K):Array<T> {
+    if (!Array.isArray(value)) {
+      throw new Error('RModel.sorted can only be called on an array')
+    }
     const node = this.requireNodeForValue(value)
     const sorted = new RMSortedArray(node, sortKeyFunc)
     return sorted.result

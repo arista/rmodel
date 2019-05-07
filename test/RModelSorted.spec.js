@@ -3,7 +3,7 @@ const RModel = require('../dist/rmodel.js')
 // Tests "RModel.sorted" values
 
 describe('rmodel sorted', ()=>{
-  xit('should error if not called on an array', ()=>{
+  it('should error if not called on an array', ()=>{
     expect(()=>RModel.sorted(RModel({}))).toThrow(new Error(`RModel.sorted can only be called on an array`))
     expect(()=>RModel.sorted(3)).toThrow(new Error(`RModel.sorted can only be called on an array`))
     expect(()=>RModel.sorted("abc")).toThrow(new Error(`RModel.sorted can only be called on an array`))
@@ -23,31 +23,31 @@ describe('rmodel sorted', ()=>{
         ]
         r = RModel({arr: o})
       })
-      xit('should sort the array by that key', ()=>{
+      it('should sort the array by that key', ()=>{
         r.sorted = RModel.sorted(r.arr, e=>e.val)
         const expected = [r.arr[4], r.arr[1], r.arr[0], r.arr[3], r.arr[2]]
         expect(r.sorted).toEqual(expected)
       })
       describe('adding elements to the array should sort them in', ()=>{
-        xit('push', ()=>{
+        it('push', ()=>{
           r.sorted = RModel.sorted(r.arr, e=>e.val)
           r.arr.push({val: 25})
           const expected = [r.arr[4], r.arr[1], r.arr[0], r.arr[5], r.arr[3], r.arr[2]]
           expect(r.sorted).toEqual(expected)
         })
-        xit('push multiple', ()=>{
+        it('push multiple', ()=>{
           r.sorted = RModel.sorted(r.arr, e=>e.val)
           r.arr.push({val: 25}, {val: 24})
           const expected = [r.arr[4], r.arr[1], r.arr[0], r.arr[6], r.arr[5], r.arr[3], r.arr[2]]
           expect(r.sorted).toEqual(expected)
         })
-        xit('unshift', ()=>{
+        it('unshift', ()=>{
           r.sorted = RModel.sorted(r.arr, e=>e.val)
           r.arr.unshift({val: 25})
           const expected = [r.arr[5], r.arr[2], r.arr[1], r.arr[0], r.arr[4], r.arr[3]]
           expect(r.sorted).toEqual(expected)
         })
-        xit('splice', ()=>{
+        it('splice', ()=>{
           r.sorted = RModel.sorted(r.arr, e=>e.val)
           r.arr.splice(2, 0, {val: 25}, {val: 24})
           const expected = [r.arr[6], r.arr[1], r.arr[0], r.arr[3], r.arr[2], r.arr[5], r.arr[4]]
