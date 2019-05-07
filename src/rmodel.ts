@@ -98,7 +98,7 @@ const rmodelApi = {
   computed: function<T,R> (f:(obj:T)=>R, options:ComputedPropertyOptions | null = null):R {
     return RMGlobal.computed(f, options)
   },
-  idref: function (id: string):object {
+  idref: function<R>(id: string):R {
     return RMGlobal.idref(id)
   },
 }

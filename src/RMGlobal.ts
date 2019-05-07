@@ -220,8 +220,10 @@ export default class RMGlobal {
   // later set as a property value, then it will be effectively be
   // treated as adding a computed property whose value is the
   // "findById" of the given id
-  static idref(id: string): RMIdref {
-    return new RMIdref(id)
+  static idref<R>(id: string): R {
+    // Although this is actually returning an RMIdRef, from the point
+    // of view of the application it acts like it's returning R
+    return (new RMIdref(id) as any)
   }
 }
 

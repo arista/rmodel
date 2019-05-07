@@ -2533,7 +2533,7 @@ export default class RMNode<T extends Object> {
       // Make a shallow copy of the immutable value
       const oldValue = this.immutableValue
       if(oldValue == null) {
-        throw new Error('Assertion failed: immutableValue should not be null')
+        throw new Error(`Assertion failed: immutableValue should not be null: ${this.pathStr}`)
       }
       const newValue = this.prepareImmutableCopy(oldValue)
       Object.assign(newValue, oldValue)
