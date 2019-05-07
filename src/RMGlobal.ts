@@ -166,7 +166,40 @@ export default class RMGlobal {
     const node = this.requireNodeForValue(value)
     return node.followImmutable(listener)
   }
+  // Returns an RMComputed wrapping the given function and options.
+  // If this RMComputed is later set as a property value, then it will
+  // effectively be treated as adding a computed property.
+  static computed<T,R>(f: (obj:T)=>R, options: ComputedPropertyOptions | null = null): R {
+    // Although this is actually returning an RMComputed, from the
+    // point of view of the application it acts like it's returning R
+    return (new RMComputed<T,R>(f, options) as any)
+  }
 
+  // Returns an RMIdref wrapping the given id.  If this RMIdref is
+  // later set as a property value, then it will be effectively be
+  // treated as adding a computed property whose value is the
+  // "findById" of the given id
+  static idref(id: string): RMIdref {
+    return new RMIdref(id)
+  }
+
+  // FIXME - description
+  static raw<T>(value: T): T {
+    if (value instanceof Object) {
+      RMNode.markAsRaw((value as any))
+    }
+    return value
+  }
+  static children(value: any):Array<any> {
+    const node = this.requireNodeForValue(value)
+    return node.children.map(n=>RMNode.toExternalValue(n))
+  }
+  static descendants(value: any):Array<any> {
+    const node = this.requireNodeForValue(value)
+    return node.descendants.map(n=>RMNode.toExternalValue(n))
+  }
+
+  //--------------------------------------------------
   
   // Returns the RMNode associated with the given value, throws an
   // exception if none
@@ -205,33 +238,6 @@ export default class RMGlobal {
   static requireObjectForNode<T>(node: RMNode<T>): T {
     // convince TypeScript that the proxy is a T
     return (node.proxy as any)
-  }
-
-  // Returns an RMComputed wrapping the given function and options.
-  // If this RMComputed is later set as a property value, then it will
-  // effectively be treated as adding a computed property.
-  static computed<T,R>(f: (obj:T)=>R, options: ComputedPropertyOptions | null = null): R {
-    // Although this is actually returning an RMComputed, from the
-    // point of view of the application it acts like it's returning R
-    return (new RMComputed<T,R>(f, options) as any)
-  }
-
-  // Returns an RMIdref wrapping the given id.  If this RMIdref is
-  // later set as a property value, then it will be effectively be
-  // treated as adding a computed property whose value is the
-  // "findById" of the given id
-  static idref<R>(id: string): R {
-    // Although this is actually returning an RMIdRef, from the point
-    // of view of the application it acts like it's returning R
-    return (new RMIdref(id) as any)
-  }
-
-  // FIXME - description
-  static raw<T>(value: T): T {
-    if (value instanceof Object) {
-      RMNode.markAsRaw((value as any))
-    }
-    return value
   }
 }
 
