@@ -101,6 +101,15 @@ const rmodelApi = {
   idref: function<R>(id: string):R {
     return RMGlobal.idref(id)
   },
+  raw: function<T>(value: T):T {
+    return RMGlobal.raw(value)
+  },
+  children: function(value: any):Array<any> {
+    return RMGlobal.children(value)
+  },
+  descendants: function(value: any):Array<any> {
+    return RMGlobal.descendants(value)
+  },
 }
 
 // Combine the main function with the API
