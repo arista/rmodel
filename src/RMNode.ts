@@ -582,6 +582,10 @@ export default class RMNode<T extends Object> {
           l(event)
         }
       }
+
+      // Notify the values that they were added or removed
+      this.notifyNodesAdded(added)
+      this.notifyNodesRemoved(removed)
     }
 
     return ret
@@ -648,6 +652,9 @@ export default class RMNode<T extends Object> {
           l(event)
         }
       }
+
+      // Notify the values that were removed
+      this.notifyNodesRemoved(removed)
     }
 
     return ret
@@ -1296,6 +1303,10 @@ export default class RMNode<T extends Object> {
         }
       }
     }
+
+    // Notify the values that they were added or removed
+    this.notifyNodesAdded(addedNodes)
+    this.notifyNodesRemoved(removedNodes)
 
     return externalDeleted
   }
@@ -2241,6 +2252,47 @@ export default class RMNode<T extends Object> {
   }
 
   //--------------------------------------------------
+  // Lifecycle notifications
+
+  // If the node's target object defines an RMNODE_ADDED property that
+  // is a function, that function is called
+  notifyAdded(node:RMNode<any>) {
+    const f = node.target[RMNODE_ADDED]
+    if (typeof(f) === 'function') {
+      f()
+    }
+  }
+  
+  // If the node's target object defines an RMNODE_ADDED property that
+  // is a function, that function is called
+  notifyNodesAdded(nodes:Array<RMNode<any>>|null) {
+    if (nodes != null) {
+      for(const node of nodes) {
+        this.notifyAdded(node)
+      }
+    }
+  }
+  
+  // If the node's target object defines an RMNODE_REMOVED property
+  // that is a function, that function is called
+  notifyRemoved(node:RMNode<any>) {
+    const f = node.target[RMNODE_REMOVED]
+    if (typeof(f) === 'function') {
+      f()
+    }
+  }
+  
+  // If the node's target object defines an RMNODE_REMOVED property
+  // that is a function, that function is called
+  notifyNodesRemoved(nodes:Array<RMNode<any>>|null) {
+    if (nodes != null) {
+      for(const node of nodes) {
+        this.notifyRemoved(node)
+      }
+    }
+  }
+  
+  //--------------------------------------------------
   // Computed properties
 
   // Adds a computed property, which will set the given property using
@@ -2643,3 +2695,13 @@ export const RMNODE_ID = Symbol('RMNODE_ID')
 // The key that, when set on a value, causes it to be treated as a
 // "raw" value that will not be RModel-enabled
 export const RMODEL_RAW = Symbol('RMODEL_RAW')
+
+// If an RModel-enabled object defines a property with this name and a
+// function value, then the function will be called after the object
+// is added to a tree.
+export const RMNODE_ADDED = Symbol('RMNODE_ADDED')
+
+// If an RModel-enabled object defines a property with this name and a
+// function value, then the function will be called after the object
+// is removed from a tree.
+export const RMNODE_REMOVED = Symbol('RMNODE_REMOVED')

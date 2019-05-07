@@ -20,6 +20,8 @@ import {Dependency} from './Types'
 import {ComputedPropertyOptions} from './Types'
 import {ImmutableListener} from './Types'
 import {RMNODE_ID} from './RMNode'
+import {RMNODE_ADDED} from './RMNode'
+import {RMNODE_REMOVED} from './RMNode'
 
 // The main function used to enable a value for RModel use
 const rmodelFunc = function<T> (value:T):T {
@@ -29,6 +31,8 @@ const rmodelFunc = function<T> (value:T):T {
 // The API methods are attached to the main function
 const rmodelApi = {
   id: RMNODE_ID,
+  added: RMNODE_ADDED,
+  removed: RMNODE_REMOVED,
   isRoot: function (value:any):boolean {
     return RMGlobal.isRoot(value)
   },
