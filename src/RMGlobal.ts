@@ -10,6 +10,7 @@ import {ImmutableListener} from './Types'
 import RMDependencyTracker from './RMDependencyTracker'
 import RMDependencyTrackers from './RMDependencyTrackers'
 import RMBufferedCalls from './RMBufferedCalls'
+import RMSortedArray from './RMSortedArray'
 
 // Serves both as the main gateway of the rmodel API, and as a
 // singleton instance for holding global RModel state
@@ -201,9 +202,10 @@ export default class RMGlobal {
     return node.descendants.map(n=>RMNode.toExternalValue(n))
   }
 
-  static sorted<T>(value: Array<T>, sortKeyFunc:(v:T)=>any):Array<T> {
+  static sorted<T,K>(value: Array<T>, sortKeyFunc:(v:T)=>K):Array<T> {
     const node = this.requireNodeForValue(value)
-    // FIXME - check that it's an array
+    const sorted = new RMSortedArray(node, sortKeyFunc)
+    return sorted.result
   }
 
   //--------------------------------------------------
