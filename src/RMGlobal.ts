@@ -201,6 +201,11 @@ export default class RMGlobal {
     return node.descendants.map(n=>RMNode.toExternalValue(n))
   }
 
+  static sorted<T>(value: Array<T>, sortKeyFunc:(v:T)=>any):Array<T> {
+    const node = this.requireNodeForValue(value)
+    // FIXME - check that it's an array
+  }
+
   //--------------------------------------------------
   
   // Returns the RMNode associated with the given value, throws an

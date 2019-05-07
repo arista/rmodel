@@ -84,6 +84,9 @@ describe('rmodel sorted', ()=>{
         // FIXME - implement this
       })
     })
+    describe('using multiple keys', ()=>{
+      // FIXME - implement this
+    })
   })
   describe('disconnecting', ()=>{
     // FIXME - implement this

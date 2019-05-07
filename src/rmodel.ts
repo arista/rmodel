@@ -114,6 +114,9 @@ const rmodelApi = {
   descendants: function(value: any):Array<any> {
     return RMGlobal.descendants(value)
   },
+  sorted: function<T>(value: Array<T>, sortKeyFunc:(v:T)=>any):Array<T> {
+    return RMGlobal.sorted(value, sortKeyFunc)
+  }
 }
 
 // Combine the main function with the API
