@@ -37,7 +37,7 @@ export default class RMSortedArray<T,K> {
   // that node
   added() {
     // Add a listener to the array
-    this.node.addChangeListener(e=>this.arrayChanged(e))
+    this.node.addChangeListener(this.arrayChangeListener)
 
     // Add all the elements from the existing array
     for(const e of this.arr) {
@@ -50,6 +50,8 @@ export default class RMSortedArray<T,K> {
   // remove any listeners from dependencies recorded when the sort
   // keys were computed
   removed() {
+    // Remove our listener from the array
+    this.node.removeChangeListener(this.arrayChangeListener)
     // FIXME - implement this
   }
 
