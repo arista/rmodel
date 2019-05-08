@@ -54,31 +54,34 @@ describe('rmodel sorted', ()=>{
           expect(r.sorted).toEqual(expected)
         })
       })
-      xit('removing an element from the array should remove it', ()=>{
-        xit('pop', ()=>{
+      describe('removing an element from the array should remove it', ()=>{
+        it('pop', ()=>{
           r.sorted = RModel.sorted(r.arr, e=>e.val)
           r.arr.pop()
           const expected = [r.arr[1], r.arr[0], r.arr[3], r.arr[2]]
           expect(r.sorted).toEqual(expected)
         })
-        xit('shift', ()=>{
+        it('shift', ()=>{
           r.sorted = RModel.sorted(r.arr, e=>e.val)
           r.arr.shift()
-          const expected = [r.arr[4], r.arr[1], r.arr[3], r.arr[2]]
+          const expected = [r.arr[3], r.arr[0], r.arr[2], r.arr[1]]
           expect(r.sorted).toEqual(expected)
         })
-        xit('splice', ()=>{
+        it('splice', ()=>{
           r.sorted = RModel.sorted(r.arr, e=>e.val)
           r.arr.splice(2, 2)
-          const expected = [r.arr[4], r.arr[1], r.arr[0]]
+          const expected = [r.arr[2], r.arr[1], r.arr[0]]
           expect(r.sorted).toEqual(expected)
         })
       })
-      xit('changing the key should re-sort the array', ()=>{
+      it('changing the key should re-sort the array', ()=>{
         r.sorted = RModel.sorted(r.arr, e=>e.val)
-        r.arr[1] = 38
+        r.arr[1].val = 38
         const expected = [r.arr[4], r.arr[0], r.arr[3], r.arr[1], r.arr[2]]
         expect(r.sorted).toEqual(expected)
+        r.arr[1].val = -10
+        const expected2 = [r.arr[1], r.arr[4], r.arr[0], r.arr[3], r.arr[2]]
+        expect(r.sorted).toEqual(expected2)
       })
       xit('should work correctly even if keys are duplicated', ()=>{
         // FIXME - implement this

@@ -3,6 +3,7 @@ import {RMNODE_ADDED} from './RMNode'
 import {RMNODE_REMOVED} from './RMNode'
 import RMSortedArrayElem from './RMSortedArrayElem'
 import RMDependencyTrackers from './RMDependencyTrackers'
+import RMDependencyTracker from './RMDependencyTracker'
 import {ChangeListener} from './Types'
 import {ChangeEvent} from './Types'
 import {ArrayChange} from './Types'
@@ -39,9 +40,39 @@ export default class RMSortedArray<T,K> {
     // Add a listener to the array
     this.node.addChangeListener(this.arrayChangeListener)
 
-    // Add all the elements from the existing array
-    for(const e of this.arr) {
-      this.add(e)
+    // Create the elements with their keys
+    for(const elem of this.arr) {
+      const {key, dependencies} = this.computeKey(elem)
+      const selem = new RMSortedArrayElem(this, elem, key, dependencies)
+      this.elems.push(selem)
+    }
+
+    // Sort the whole array at once
+    this.elems.sort((s1, s2)=>this.compare(s1.key, s2.key))
+
+    // Extract the sorted elements and push them all at once onto the
+    // resulting RModel array
+    const relems = this.elems.map((e)=>e.elem)
+    this.result.push(...relems)
+  }
+
+  computeKey(elem:T):{key: K, dependencies: RMDependencyTracker} {
+    let k = null
+    const dependencies = RMDependencyTrackers.trackDependencies(()=>k = this.sortKeyFunc(elem))
+    // Convince TypeScript that key will be a K at this point
+    const key = ((k as unknown) as K)
+    return {key, dependencies}
+  }
+
+  compare(v1:any, v2:any):number {
+    if (v1 < v2) {
+      return -1
+    }
+    else if (v1 > v2) {
+      return 1
+    }
+    else {
+      return 0
     }
   }
 
@@ -52,7 +83,11 @@ export default class RMSortedArray<T,K> {
   removed() {
     // Remove our listener from the array
     this.node.removeChangeListener(this.arrayChangeListener)
-    // FIXME - implement this
+
+    // Remove the listeners from all the elements
+    for(const selem of this.elems) {
+      selem.removed()
+    }
   }
 
   // Called whenever the aray changes
@@ -82,39 +117,73 @@ export default class RMSortedArray<T,K> {
       const mid = Math.floor((low + high) / 2)
       const elem = this.elems[mid]
       const elemKey = elem.key
-      if (elemKey == key) {
+      switch(this.compare(elemKey, key)) {
+      case 0:
         return mid
-      }
-      else if (elemKey < key) {
+      case -1:
         low = mid
-      }
-      else if (elemKey > key) {
+        break
+      case 1:
         high = mid
+        break
       }
     }
     return high
   }
 
+  // Returns the index of the given element
+  indexOf(elem:T, key:K):number {
+    const ix = this.insertionPoint(key)
+    // Search up
+    for(let ii = ix; ii < this.elems.length && this.elems[ii].key == key; ii++) {
+      if (this.elems[ii].elem === elem) {
+        return ii
+      }
+    }
+    // Search down
+    for(let ii = ix - 1; ii >= 0 && this.elems[ii].key == key; ii--) {
+      if (this.elems[ii].elem === elem) {
+        return ii
+      }
+    }
+    return -1
+  }
+
   // Adds the given element into the array
   add(elem:T) {
-    // Get the key while tracking dependencies
-    let key = null
-    const dependencies = RMDependencyTrackers.trackDependencies(()=>key = this.sortKeyFunc(elem))
-    // Convince TypeScript that key will be a K at this point
-    const elemKey = ((key as unknown) as K)
-    const ix = this.insertionPoint(elemKey)
-    const rmaElem = new RMSortedArrayElem(elem, elemKey, dependencies)
+    const {key, dependencies} = this.computeKey(elem)
+    const ix = this.insertionPoint(key)
+    const selem = new RMSortedArrayElem(this, elem, key, dependencies)
+    this.insertAt(selem, ix)
+  }
 
-    // Create listeners
-    // FIXME - implement this
-
-    // Insert into the arrays
-    this.result.splice(ix, 0, elem)
-    this.elems.splice(ix, 0, rmaElem)
-    // FIXME - implement this
+  insertAt(selem: RMSortedArrayElem<T,K>, ix: number) {
+    this.result.splice(ix, 0, selem.elem)
+    this.elems.splice(ix, 0, selem)
   }
 
   remove(elem:T) {
-    // FIXME - implement this
+    const key = this.sortKeyFunc(elem)
+    const ix = this.indexOf(elem, key)
+    this.removeAt(ix)
+  }
+
+  removeAt(ix:number) {
+    const selem = this.elems[ix]
+    selem.removed()
+    this.elems.splice(ix, 1)
+    this.result.splice(ix, 1)
+  }
+
+  keyChanged(selem:RMSortedArrayElem<T,K>) {
+    const elem = selem.elem
+    const ix = this.indexOf(elem, selem.key)
+    this.removeAt(ix)
+    
+    // Get the new key
+    const {key, dependencies} = this.computeKey(elem)
+    selem.updateKey(key, dependencies)
+    const newIx = this.insertionPoint(key)
+    this.insertAt(selem, newIx)
   }
 }
