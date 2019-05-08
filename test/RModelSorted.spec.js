@@ -83,11 +83,12 @@ describe('rmodel sorted', ()=>{
         const expected2 = [r.arr[1], r.arr[4], r.arr[0], r.arr[3], r.arr[2]]
         expect(r.sorted).toEqual(expected2)
       })
-      xit('should work correctly even if keys are duplicated', ()=>{
+      it('should work correctly even if keys are duplicated', ()=>{
         // FIXME - implement this
       })
     })
-    describe('using multiple keys', ()=>{
+    describe('using compound keys', ()=>{
+      // FIXME - can we have keys that are arrays, effectively acting as compound keys?
       // FIXME - implement this
     })
   })
